@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<dimen name="button_max_width">400dp</dimen>
+<dimen name="edittext_max_width">400dp</dimen>
+<dimen name="card_padding_horizontal">24dp</dimen>
+<dimen name="card_padding_top">32dp</dimen>
+<dimen name="card_padding_bottom">24dp</dimen>
+<dimen name="logo_size">90dp</dimen>
+<dimen name="logo_image_size">60dp</dimen>
+<dimen name="edittext_height">56dp</dimen>
+<dimen name="button_height">54dp</dimen>
+<dimen name="touch_target_min_size">48dp</dimen>
+</resources>

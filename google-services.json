@@ -1,0 +1,40 @@
+  {
+  "project_info": {
+    "project_number": "1051149684049",
+    "firebase_url": "https://baustcafemanagement-default-rtdb.firebaseio.com",
+    "project_id": "baustcafemanagement",
+    "storage_bucket": "baustcafemanagement.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1051149684049:android:57e57581ccb6759a145770",
+        "android_client_info": {
+          "package_name": "com.baust.cafe"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1051149684049-n6ts9euig9mepvmqd7edg9716aicl5bp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAkdquK26Z0nZZJLiFzAdQ59vzJSx2yQXs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1051149684049-n6ts9euig9mepvmqd7edg9716aicl5bp.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
