@@ -1,5 +1,6 @@
 package com.baust.cafe.activities
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.baust.cafe.R
@@ -22,16 +23,33 @@ class ManageMenuActivity : AppCompatActivity() {
         setContentView(R.layout.activity_manage_menu)
 
         recyclerView = findViewById(R.id.manageMenuRecyclerView)
-        recyclerView.layoutManager = LinearLayoutManager(this)
+        // Set to 2-column Grid for Admin too
+        recyclerView.layoutManager = androidx.recyclerview.widget.GridLayoutManager(this, 2)
 
         adapter = MenuAdapter(
             menuItems = menuItemsList,
             isAdmin = true,
             onAvailabilityChanged = { item, isAvailable ->
                 updateItemAvailability(item, isAvailable)
+            },
+            onEditClicked = { item ->
+                val intent = Intent(this, EditMenuItemActivity::class.java).apply {
+                    putExtra("ITEM_ID", item.itemId)
+                    putExtra("ITEM_NAME", item.name)
+                    putExtra("ITEM_DESC", item.description)
+                    putExtra("ITEM_PRICE", item.price)
+                    putExtra("ITEM_CAT", item.category)
+                    putExtra("ITEM_IMAGE", item.imageUrl)
+                    putExtra("ITEM_AVAILABLE", item.available)
+                }
+                startActivity(intent)
             }
         )
         recyclerView.adapter = adapter
+
+        findViewById<com.google.android.material.floatingactionbutton.FloatingActionButton>(R.id.addMenuFab).setOnClickListener {
+            startActivity(Intent(this, AddMenuItemActivity::class.java))
+        }
 
         fetchMenuData()
     }
@@ -55,7 +73,7 @@ class ManageMenuActivity : AppCompatActivity() {
     }
 
     private fun updateItemAvailability(item: MenuItem, isAvailable: Boolean) {
-        database.child(item.itemId).child("isAvailable").setValue(isAvailable)
+        database.child(item.itemId).child("available").setValue(isAvailable)
             .addOnSuccessListener {
                 val status = if (isAvailable) "Available" else "Out of Stock"
                 Toast.makeText(this, "${item.name} is now $status", Toast.LENGTH_SHORT).show()

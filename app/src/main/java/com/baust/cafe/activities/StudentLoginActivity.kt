@@ -95,7 +95,9 @@ class StudentLoginActivity : AppCompatActivity() {
 
         // GOOGLE LOGIN CLICK
         googleLoginButton.setOnClickListener {
-            signInWithGoogle()
+            googleSignInClient.signOut().addOnCompleteListener {
+                signInWithGoogle()
+            }
         }
     }
 
@@ -123,9 +125,28 @@ class StudentLoginActivity : AppCompatActivity() {
         auth.signInWithCredential(credential)
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
-                    val intent = Intent(this, HomeActivity::class.java)
-                    startActivity(intent)
-                    finish()
+                    // Check if user exists in database, if not create them
+                    val user = auth.currentUser
+                    val database = com.google.firebase.database.FirebaseDatabase.getInstance().getReference("Users")
+                    
+                    user?.let {
+                        database.child(it.uid).get().addOnSuccessListener { snapshot ->
+                            if (!snapshot.exists()) {
+                                // Create new user entry for Google Login
+                                val newUser = com.baust.cafe.models.User(
+                                    userId = it.uid,
+                                    name = it.displayName ?: "User",
+                                    email = it.email ?: "",
+                                    userType = "student"
+                                )
+                                database.child(it.uid).setValue(newUser)
+                            }
+                            
+                            val intent = Intent(this, HomeActivity::class.java)
+                            startActivity(intent)
+                            finish()
+                        }
+                    }
                 } else {
                     Toast.makeText(this, "Firebase auth with Google failed", Toast.LENGTH_SHORT).show()
                 }

@@ -54,6 +54,10 @@ dependencies {
     implementation("com.google.firebase:firebase-storage")
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.android.gms:play-services-auth:21.0.0")
+    // implementation("com.google.android.gms:play-services-maps:18.2.0") 
+    implementation("org.osmdroid:osmdroid-android:6.1.20") // Free OpenStreetMap
+    implementation("androidx.preference:preference-ktx:1.2.1")
+    implementation("com.google.android.gms:play-services-location:21.1.0")
 
     // UI Components
     implementation("androidx.recyclerview:recyclerview:1.3.2")
@@ -63,6 +67,9 @@ dependencies {
     // Image Loading
     implementation("com.github.bumptech.glide:glide:4.16.0")
     implementation("de.hdodenhof:circleimageview:3.1.0")
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
 
     // Testing
     testImplementation("junit:junit:4.13.2")

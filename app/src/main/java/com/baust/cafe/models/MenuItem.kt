@@ -6,7 +6,7 @@ data class MenuItem(
     val description: String = "",
     val price: Double = 0.0,
     val category: String = "", // e.g., "Beverages", "Snacks", "Meals"
-    val isAvailable: Boolean = true,
+    val available: Boolean = true,
     val imageUrl: String = "",
     val preparationTime: Int = 15 // in minutes
 )

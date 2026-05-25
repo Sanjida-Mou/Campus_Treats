@@ -35,28 +35,52 @@ class MenuActivity : AppCompatActivity() {
         recyclerView.adapter = adapter
 
         fetchMenuData()
+        setupNavigation()
+    }
+
+    private fun setupNavigation() {
+        findViewById<android.widget.ImageView>(R.id.navHome).setOnClickListener {
+            startActivity(android.content.Intent(this, HomeActivity::class.java))
+            finish()
+        }
+
+        findViewById<android.widget.ImageView>(R.id.navBookmark).setOnClickListener {
+            // Already on Menu
+        }
+
+        findViewById<android.widget.ImageView>(R.id.navHistory).setOnClickListener {
+            startActivity(android.content.Intent(this, OrderHistoryActivity::class.java))
+            finish()
+        }
+
+        findViewById<android.widget.ImageView>(R.id.navNotifications).setOnClickListener {
+            Toast.makeText(this, "No new notifications", Toast.LENGTH_SHORT).show()
+        }
+
+        findViewById<android.widget.ImageView>(R.id.navProfile).setOnClickListener {
+            startActivity(android.content.Intent(this, UserDashboardActivity::class.java))
+            finish()
+        }
+
+        findViewById<android.widget.ImageView>(R.id.backBtn).setOnClickListener {
+            finish()
+        }
     }
 
     private fun fetchMenuData() {
         database = FirebaseDatabase.getInstance().getReference("Menu")
         
-        // --- ADDING SAMPLE DATA IF MENU IS EMPTY ---
+        // --- REMOVED SAMPLE DATA AUTO-GENERATION ---
+        /*
         database.get().addOnSuccessListener { snapshot ->
             if (!snapshot.exists()) {
-                val sampleItems = listOf(
-                    MenuItem("1", "Burger", "Juicy chicken burger with cheese", 120.0, "Snacks", true),
-                    MenuItem("2", "Sandwich", "Healthy club sandwich with egg", 80.0, "Snacks", true),
-                    MenuItem("3", "Shingara", "Classic potato shingara (2 pcs)", 20.0, "Snacks", true),
-                    MenuItem("4", "Puri", "Crispy dal puri (2 pcs)", 20.0, "Snacks", false),
-                    MenuItem("5", "Chicken Biriyani", "Fragrant basmati rice with chicken", 180.0, "Meals", true),
-                    MenuItem("6", "Khichuri", "Delicious bhuna khichuri with egg", 100.0, "Meals", true),
-                    MenuItem("7", "Chola", "Spicy chola masala with paratha", 40.0, "Breakfast", true)
-                )
+                val sampleItems = listOf(...)
                 sampleItems.forEach { item ->
                     database.child(item.itemId).setValue(item)
                 }
             }
         }
+        */
         // -------------------------------------------
 
         database.addValueEventListener(object : ValueEventListener {
@@ -76,7 +100,14 @@ class MenuActivity : AppCompatActivity() {
     }
 
     private fun addToCart(item: MenuItem) {
-        // Logic to add item to Cart (e.g., saving to Firebase or local storage)
+        val cartItem = com.baust.cafe.models.CartItem(
+            itemId = item.itemId,
+            itemName = item.name,
+            price = item.price,
+            quantity = 1,
+            imageUrl = item.imageUrl
+        )
+        com.baust.cafe.utils.CartManager.addItem(cartItem)
         Toast.makeText(this, "${item.name} added to cart", Toast.LENGTH_SHORT).show()
     }
 }

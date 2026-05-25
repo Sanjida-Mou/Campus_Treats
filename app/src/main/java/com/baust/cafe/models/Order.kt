@@ -4,6 +4,7 @@ data class Order(
     val orderId: String = "",
     val studentId: String = "",
     val studentName: String = "",
+    val studentPhone: String = "",
     val items: List<OrderItem> = listOf(),
     val totalAmount: Double = 0.0,
     val orderTime: Long = System.currentTimeMillis(),

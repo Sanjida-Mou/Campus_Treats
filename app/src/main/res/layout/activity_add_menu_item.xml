@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="@color/light_bg">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="24dp">
+
+        <TextView
+            android:id="@+id/titleText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Add New Food Item"
+            android:textColor="@color/text_black"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"/>
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/imageCard"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:layout_marginTop="24dp"
+            app:cardCornerRadius="16dp"
+            app:layout_constraintTop_toBottomOf="@id/titleText">
+
+            <ImageView
+                android:id="@+id/addItemImage"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:src="@drawable/cafe_logo" />
+        </androidx.cardview.widget.CardView>
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/selectImageFab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="16dp"
+            android:src="@drawable/ic_plus"
+            app:fabSize="mini"
+            app:layout_constraintBottom_toBottomOf="@id/imageCard"
+            app:layout_constraintEnd_toEndOf="@id/imageCard"
+            android:contentDescription="Select Image" />
+
+        <TextView
+            android:id="@+id/orText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="--- OR ---"
+            android:textColor="@color/text_hint"
+            android:textSize="12sp"
+            android:layout_marginTop="8dp"
+            app:layout_constraintTop_toBottomOf="@id/imageCard"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
+
+        <EditText
+            android:id="@+id/itemImageUrl"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/edit_text_background"
+            android:hint="Paste Food Image URL here"
+            android:paddingHorizontal="16dp"
+            android:textColor="@color/text_black"
+            android:textColorHint="@color/text_hint"
+            app:layout_constraintTop_toBottomOf="@id/orText"/>
+
+        <EditText
+            android:id="@+id/itemName"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/edit_text_background"
+            android:hint="Food Name"
+            android:paddingHorizontal="16dp"
+            android:textColor="@color/text_black"
+            android:textColorHint="@color/text_hint"
+            app:layout_constraintTop_toBottomOf="@id/itemImageUrl"/>
+
+        <EditText
+            android:id="@+id/itemDescription"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/edit_text_background"
+            android:hint="Short Description"
+            android:paddingHorizontal="16dp"
+            android:textColor="@color/text_black"
+            android:textColorHint="@color/text_hint"
+            app:layout_constraintTop_toBottomOf="@id/itemName"/>
+
+        <EditText
+            android:id="@+id/itemPrice"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/edit_text_background"
+            android:hint="Price (in Tk.)"
+            android:inputType="numberDecimal"
+            android:paddingHorizontal="16dp"
+            android:textColor="@color/text_black"
+            android:textColorHint="@color/text_hint"
+            app:layout_constraintTop_toBottomOf="@id/itemDescription"/>
+
+        <EditText
+            android:id="@+id/itemCategory"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/edit_text_background"
+            android:hint="Category (e.g. Burger, Pizza)"
+            android:paddingHorizontal="16dp"
+            android:textColor="@color/text_black"
+            android:textColorHint="@color/text_hint"
+            app:layout_constraintTop_toBottomOf="@id/itemPrice"/>
+
+        <Button
+            android:id="@+id/addFoodButton"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_marginTop="32dp"
+            android:background="@drawable/login_button_green"
+            android:text="ADD FOOD TO MENU"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            app:layout_constraintTop_toBottomOf="@id/itemCategory"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

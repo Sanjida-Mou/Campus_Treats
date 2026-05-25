@@ -6,7 +6,8 @@ data class Review(
     val studentName: String = "",
     val itemId: String = "",
     val itemName: String = "",
-    val rating: Float = 5.0f, // 1.0 to 5.0
+    val rating: Float = 5.0f,
     val comment: String = "",
+    val reply: String = "", // Added for Admin reply
     val timestamp: Long = System.currentTimeMillis()
 )

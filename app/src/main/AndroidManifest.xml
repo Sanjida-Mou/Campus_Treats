@@ -4,6 +4,13 @@
     package="com.baust.cafe">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
         android:allowBackup="true"
@@ -68,6 +75,41 @@
             android:exported="false" />
         <activity
             android:name=".activities.UserDashboardActivity"
+            android:exported="false" />
+
+        <!-- Edit Profile Activity -->
+        <activity
+            android:name=".activities.EditProfileActivity"
+            android:exported="false" />
+
+        <!-- Add Menu Item Activity -->
+        <activity
+            android:name=".activities.AddMenuItemActivity"
+            android:exported="false" />
+
+        <!-- Edit Menu Item Activity -->
+        <activity
+            android:name=".activities.EditMenuItemActivity"
+            android:exported="false" />
+
+        <!-- Food Detail Activity -->
+        <activity
+            android:name=".activities.FoodDetailActivity"
+            android:exported="false" />
+
+        <!-- Checkout Activity -->
+        <activity
+            android:name=".activities.CheckoutActivity"
+            android:exported="false" />
+
+        <!-- View Reviews Activity -->
+        <activity
+            android:name=".activities.ViewReviewsActivity"
+            android:exported="false" />
+
+        <!-- Rate Us Activity -->
+        <activity
+            android:name=".activities.RateUsActivity"
             android:exported="false" />
 
     </application>

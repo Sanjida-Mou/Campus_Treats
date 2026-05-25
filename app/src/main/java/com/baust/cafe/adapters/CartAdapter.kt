@@ -9,6 +9,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.baust.cafe.R
 import com.baust.cafe.models.CartItem
+import com.bumptech.glide.Glide
 import java.util.Locale
 
 class CartAdapter(
@@ -33,8 +34,18 @@ class CartAdapter(
     override fun onBindViewHolder(holder: CartViewHolder, position: Int) {
         val item = cartItems[position]
         holder.nameText.text = item.itemName
-        holder.priceText.text = String.format(Locale.getDefault(), "$%.2f", item.price)
+        holder.priceText.text = String.format(Locale.getDefault(), "Tk. %.2f", item.price)
         holder.quantityText.text = item.quantity.toString()
+
+        // Load image using Glide
+        if (item.imageUrl.isNotEmpty()) {
+            Glide.with(holder.itemView.context)
+                .load(item.imageUrl)
+                .placeholder(R.drawable.cafe_logo)
+                .into(holder.itemImage)
+        } else {
+            holder.itemImage.setImageResource(R.drawable.cafe_logo)
+        }
 
         holder.plusButton.setOnClickListener {
             val newItem = item.copy(quantity = item.quantity + 1)

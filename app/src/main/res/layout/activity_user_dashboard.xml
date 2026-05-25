@@ -6,11 +6,10 @@
     android:layout_height="match_parent"
     android:background="@color/light_bg">
 
-    <!-- Green Header -->
     <View
         android:id="@+id/headerView"
         android:layout_width="match_parent"
-        android:layout_height="220dp"
+        android:layout_height="240dp"
         android:background="@drawable/green_curve_background"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -18,10 +17,10 @@
         android:id="@+id/dashboardTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="60dp"
+        android:layout_marginTop="50dp"
         android:text="My Dashboard"
         android:textColor="@color/white"
-        android:textSize="28sp"
+        android:textSize="32sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -31,20 +30,20 @@
         android:id="@+id/welcomeUserText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
         android:text="Welcome back, Guest"
-        android:textColor="@color/white"
-        android:textSize="14sp"
+        android:textColor="#E0E0E0"
+        android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/dashboardTitle" />
 
-    <!-- Dashboard Content -->
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="30dp"
+        android:layout_marginTop="16dp"
         app:layout_constraintBottom_toTopOf="@id/bottomNavCard"
-        app:layout_constraintTop_toBottomOf="@id/dashboardTitle">
+        app:layout_constraintTop_toBottomOf="@id/headerView">
 
         <GridLayout
             android:layout_width="match_parent"
@@ -57,42 +56,36 @@
             <androidx.cardview.widget.CardView
                 android:id="@+id/browseMenuCard"
                 android:layout_width="0dp"
-                android:layout_height="170dp"
+                android:layout_height="160dp"
                 android:layout_rowWeight="1"
                 android:layout_columnWeight="1"
-                android:layout_margin="12dp"
+                android:layout_margin="10dp"
+                app:cardBackgroundColor="@color/white"
                 app:cardCornerRadius="24dp"
-                app:cardElevation="8dp"
-                app:cardBackgroundColor="@color/white">
+                app:cardElevation="8dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:gravity="center"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
+                    android:orientation="vertical">
                     <View
-                        android:layout_width="64dp"
-                        android:layout_height="64dp"
+                        android:layout_width="60dp"
+                        android:layout_height="60dp"
                         android:background="@drawable/cart_badge_bg"
-                        android:backgroundTint="@color/card_green"
-                        android:padding="16dp"/>
-
+                        android:backgroundTint="@color/card_green" />
                     <ImageView
                         android:layout_width="32dp"
                         android:layout_height="32dp"
-                        android:layout_marginTop="-48dp"
+                        android:layout_marginTop="-46dp"
                         android:src="@drawable/ic_menu"
-                        app:tint="@color/primary_green" />
-
+                        app:tint="#4CAF50" />
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="28dp"
+                        android:layout_marginTop="24dp"
                         android:text="Browse Menu"
                         android:textColor="@color/text_black"
-                        android:textSize="15sp"
                         android:textStyle="bold" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -101,130 +94,188 @@
             <androidx.cardview.widget.CardView
                 android:id="@+id/myOrdersCard"
                 android:layout_width="0dp"
-                android:layout_height="170dp"
+                android:layout_height="160dp"
                 android:layout_rowWeight="1"
                 android:layout_columnWeight="1"
-                android:layout_margin="12dp"
+                android:layout_margin="10dp"
+                app:cardBackgroundColor="@color/white"
                 app:cardCornerRadius="24dp"
-                app:cardElevation="8dp"
-                app:cardBackgroundColor="@color/white">
+                app:cardElevation="8dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:gravity="center"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
+                    android:orientation="vertical">
                     <View
-                        android:layout_width="64dp"
-                        android:layout_height="64dp"
+                        android:layout_width="60dp"
+                        android:layout_height="60dp"
                         android:background="@drawable/cart_badge_bg"
-                        android:backgroundTint="@color/card_blue"
-                        android:padding="16dp"/>
-
+                        android:backgroundTint="@color/card_blue" />
                     <ImageView
                         android:layout_width="32dp"
                         android:layout_height="32dp"
-                        android:layout_marginTop="-48dp"
+                        android:layout_marginTop="-46dp"
                         android:src="@drawable/ic_history"
                         app:tint="#1976D2" />
-
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="28dp"
+                        android:layout_marginTop="24dp"
                         android:text="My Orders"
                         android:textColor="@color/text_black"
-                        android:textSize="15sp"
                         android:textStyle="bold" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- My Cart -->
+            <!-- View Cart -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/myCartCard"
                 android:layout_width="0dp"
-                android:layout_height="170dp"
+                android:layout_height="160dp"
                 android:layout_rowWeight="1"
                 android:layout_columnWeight="1"
-                android:layout_margin="12dp"
+                android:layout_margin="10dp"
+                app:cardBackgroundColor="@color/white"
                 app:cardCornerRadius="24dp"
-                app:cardElevation="8dp"
-                app:cardBackgroundColor="@color/white">
+                app:cardElevation="8dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:gravity="center"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
+                    android:orientation="vertical">
                     <View
-                        android:layout_width="64dp"
-                        android:layout_height="64dp"
+                        android:layout_width="60dp"
+                        android:layout_height="60dp"
                         android:background="@drawable/cart_badge_bg"
-                        android:backgroundTint="@color/card_orange"
-                        android:padding="16dp"/>
-
+                        android:backgroundTint="@color/card_orange" />
                     <ImageView
                         android:layout_width="32dp"
                         android:layout_height="32dp"
-                        android:layout_marginTop="-48dp"
+                        android:layout_marginTop="-46dp"
                         android:src="@drawable/ic_cart"
-                        app:tint="#E65100" />
-
+                        app:tint="#F57C00" />
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="28dp"
+                        android:layout_marginTop="24dp"
                         android:text="View Cart"
                         android:textColor="@color/text_black"
-                        android:textSize="15sp"
                         android:textStyle="bold" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- Give Review -->
+            <!-- Rate Us -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/giveReviewCard"
                 android:layout_width="0dp"
-                android:layout_height="170dp"
+                android:layout_height="160dp"
                 android:layout_rowWeight="1"
                 android:layout_columnWeight="1"
-                android:layout_margin="12dp"
+                android:layout_margin="10dp"
+                app:cardBackgroundColor="@color/white"
                 app:cardCornerRadius="24dp"
-                app:cardElevation="8dp"
-                app:cardBackgroundColor="@color/white">
+                app:cardElevation="8dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:gravity="center"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
+                    android:orientation="vertical">
                     <View
-                        android:layout_width="64dp"
-                        android:layout_height="64dp"
+                        android:layout_width="60dp"
+                        android:layout_height="60dp"
                         android:background="@drawable/cart_badge_bg"
-                        android:backgroundTint="@color/card_pink"
-                        android:padding="16dp"/>
-
+                        android:backgroundTint="@color/card_pink" />
                     <ImageView
                         android:layout_width="32dp"
                         android:layout_height="32dp"
-                        android:layout_marginTop="-48dp"
+                        android:layout_marginTop="-46dp"
                         android:src="@drawable/ic_notifications"
                         app:tint="#C2185B" />
-
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="28dp"
+                        android:layout_marginTop="24dp"
                         android:text="Rate Us"
                         android:textColor="@color/text_black"
-                        android:textSize="15sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Profile Details -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/profileDetailsCard"
+                android:layout_width="0dp"
+                android:layout_height="160dp"
+                android:layout_rowWeight="1"
+                android:layout_columnWeight="1"
+                android:layout_margin="10dp"
+                app:cardBackgroundColor="@color/white"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="8dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:orientation="vertical">
+                    <View
+                        android:layout_width="60dp"
+                        android:layout_height="60dp"
+                        android:background="@drawable/cart_badge_bg"
+                        android:backgroundTint="#E1F5FE" />
+                    <ImageView
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_marginTop="-46dp"
+                        android:src="@drawable/ic_person"
+                        app:tint="#03A9F4" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="24dp"
+                        android:text="My Profile"
+                        android:textColor="@color/text_black"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Logout -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/logoutCard"
+                android:layout_width="0dp"
+                android:layout_height="160dp"
+                android:layout_rowWeight="1"
+                android:layout_columnWeight="1"
+                android:layout_margin="10dp"
+                app:cardBackgroundColor="@color/white"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="8dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:orientation="vertical">
+                    <View
+                        android:layout_width="60dp"
+                        android:layout_height="60dp"
+                        android:background="@drawable/cart_badge_bg"
+                        android:backgroundTint="#FFEBEE" />
+                    <ImageView
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_marginTop="-46dp"
+                        android:src="@drawable/ic_minus"
+                        app:tint="#D32F2F" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="24dp"
+                        android:text="Logout"
+                        android:textColor="@color/text_black"
                         android:textStyle="bold" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -232,7 +283,6 @@
         </GridLayout>
     </androidx.core.widget.NestedScrollView>
 
-    <!-- Bottom Navigation -->
     <androidx.cardview.widget.CardView
         android:id="@+id/bottomNavCard"
         android:layout_width="match_parent"
