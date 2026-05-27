@@ -80,6 +80,16 @@
             android:textStyle="bold" />
 
         <TextView
+            android:id="@+id/orderTrxId"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="TrxID: A1B2C3D4"
+            android:textColor="@color/text_hint"
+            android:textSize="12sp"
+            android:visibility="gone" />
+
+        <TextView
             android:id="@+id/orderTotal"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -107,11 +117,22 @@
                 android:backgroundTint="@color/primary_green"/>
 
             <Button
-                android:id="@+id/btnHandleCancellation"
+                android:id="@+id/btnVerifyPayment"
                 android:layout_width="wrap_content"
                 android:layout_height="40dp"
                 android:layout_marginStart="8dp"
-                android:text="Accept Cancel"
+                android:text="Verify Payment"
+                android:textSize="10sp"
+                android:textAllCaps="false"
+                android:backgroundTint="@color/primary_green"
+                android:visibility="gone"/>
+
+            <Button
+                android:id="@+id/btnRejectPayment"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_marginStart="8dp"
+                android:text="Reject"
                 android:textSize="10sp"
                 android:textAllCaps="false"
                 android:backgroundTint="@color/error_red"

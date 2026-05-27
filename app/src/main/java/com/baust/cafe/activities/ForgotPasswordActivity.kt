@@ -2,12 +2,7 @@ package com.baust.cafe.activities
 
 import android.os.Bundle
 import android.view.View
-import android.widget.Button
-import android.widget.EditText
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import com.baust.cafe.R
 import com.baust.cafe.models.User
@@ -16,10 +11,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.PhoneAuthCredential
 import com.google.firebase.auth.PhoneAuthOptions
 import com.google.firebase.auth.PhoneAuthProvider
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.*
 import java.util.concurrent.TimeUnit
 
 class ForgotPasswordActivity : AppCompatActivity() {
@@ -33,6 +25,9 @@ class ForgotPasswordActivity : AppCompatActivity() {
     private lateinit var otpLayout: LinearLayout
     private lateinit var otpEditText: EditText
     private lateinit var verifyButton: Button
+    private lateinit var newPasswordLayout: LinearLayout
+    private lateinit var newPasswordEdit: EditText
+    private lateinit var updatePasswordButton: Button
     private lateinit var backButton: ImageView
     private lateinit var statusText: TextView
 
@@ -47,6 +42,9 @@ class ForgotPasswordActivity : AppCompatActivity() {
         otpLayout = findViewById(R.id.otpLayout)
         otpEditText = findViewById(R.id.otpEditText)
         verifyButton = findViewById(R.id.verifyButton)
+        newPasswordLayout = findViewById(R.id.newPasswordLayout)
+        newPasswordEdit = findViewById(R.id.newPasswordEdit)
+        updatePasswordButton = findViewById(R.id.updatePasswordButton)
         backButton = findViewById(R.id.backButton)
         statusText = findViewById(R.id.statusText)
 
@@ -55,7 +53,7 @@ class ForgotPasswordActivity : AppCompatActivity() {
         sendCodeButton.setOnClickListener {
             val input = recoveryIdentifier.text.toString().trim()
             if (input.isNotEmpty()) {
-                findUserAndSendSms(input)
+                findUserAndInitiateRecovery(input)
             } else {
                 Toast.makeText(this, "Please enter your registered email or phone", Toast.LENGTH_SHORT).show()
             }
@@ -70,9 +68,18 @@ class ForgotPasswordActivity : AppCompatActivity() {
                 Toast.makeText(this, "Please enter the verification code", Toast.LENGTH_SHORT).show()
             }
         }
+
+        updatePasswordButton.setOnClickListener {
+            val newPass = newPasswordEdit.text.toString().trim()
+            if (newPass.length >= 6) {
+                updateAccountPassword(newPass)
+            } else {
+                Toast.makeText(this, "Password must be at least 6 characters", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
-    private fun findUserAndSendSms(input: String) {
+    private fun findUserAndInitiateRecovery(input: String) {
         statusText.visibility = View.VISIBLE
         statusText.text = "Searching for account..."
         
@@ -83,18 +90,14 @@ class ForgotPasswordActivity : AppCompatActivity() {
                 var foundUser: User? = null
                 
                 if (!snapshot.exists()) {
-                    statusText.text = "No users found in database. Please Register."
+                    statusText.text = "No users found in database."
                     return
                 }
-
-                // Log number of users for debugging (seen in status text)
-                statusText.text = "Checking ${snapshot.childrenCount} registered accounts..."
 
                 for (userSnapshot in snapshot.children) {
                     val user = userSnapshot.getValue(User::class.java)
                     if (user != null) {
                         val cleanRegisteredPhone = user.phoneNumber.replace("\\D".toRegex(), "")
-                        
                         val isEmailMatch = user.email.trim().equals(input, ignoreCase = true)
                         val isPhoneMatch = cleanInput.isNotEmpty() && cleanRegisteredPhone.isNotEmpty() && 
                                            (cleanInput.endsWith(cleanRegisteredPhone) || cleanRegisteredPhone.endsWith(cleanInput))
@@ -107,16 +110,20 @@ class ForgotPasswordActivity : AppCompatActivity() {
                 }
 
                 if (foundUser != null) {
+                    // 1. Always send Email Link as primary secure method
+                    sendEmailReset(foundUser.email)
+                    
+                    // 2. If phone exists, send SMS Code (Free OTP)
                     if (foundUser.phoneNumber.isNotEmpty()) {
-                        statusText.text = "Account found. Sending SMS to ${foundUser.phoneNumber}..."
+                        statusText.text = "Reset link sent to ${foundUser.email}.\nSending SMS verification code to ${foundUser.phoneNumber}..."
                         sendVerificationCode(foundUser.phoneNumber)
                     } else {
-                        statusText.text = "Account found, but no phone registered. Sending reset link to email..."
-                        sendEmailReset(foundUser.email)
+                        statusText.text = "Reset link sent to ${foundUser.email}. No phone registered for SMS."
+                        Toast.makeText(this@ForgotPasswordActivity, "Check your email for the link", Toast.LENGTH_LONG).show()
                     }
                 } else {
-                    statusText.text = "No account found with this email or phone number."
-                    Toast.makeText(this@ForgotPasswordActivity, "User not found. Check your details.", Toast.LENGTH_LONG).show()
+                    statusText.text = "No account found with this email or phone."
+                    Toast.makeText(this@ForgotPasswordActivity, "User not found.", Toast.LENGTH_LONG).show()
                 }
             }
 
@@ -127,7 +134,6 @@ class ForgotPasswordActivity : AppCompatActivity() {
     }
 
     private fun sendVerificationCode(phone: String) {
-        // Ensure phone starts with + for Firebase
         val formattedPhone = if (phone.startsWith("+")) phone else "+88$phone"
         
         val options = PhoneAuthOptions.newBuilder(auth)
@@ -140,17 +146,15 @@ class ForgotPasswordActivity : AppCompatActivity() {
                 }
 
                 override fun onVerificationFailed(e: FirebaseException) {
-                    statusText.text = "Failed to send SMS: ${e.message}"
-                    Toast.makeText(this@ForgotPasswordActivity, "SMS failed. Use Email reset or try later.", Toast.LENGTH_LONG).show()
-                    // Fallback to email if SMS fails
-                    // findUserAndSendEmail(formattedPhone) // Optional
+                    statusText.text = "SMS sending failed. Please use the reset link sent to your email instead."
+                    android.util.Log.e("SMS_ERROR", e.message ?: "Unknown error")
                 }
 
                 override fun onCodeSent(id: String, token: PhoneAuthProvider.ForceResendingToken) {
                     verificationId = id
                     otpLayout.visibility = View.VISIBLE
                     sendCodeButton.visibility = View.GONE
-                    statusText.text = "A 6-digit code has been sent to $formattedPhone"
+                    statusText.text = "Reset link sent to Email. 6-digit SMS code sent to $formattedPhone"
                 }
             })
             .build()
@@ -158,26 +162,32 @@ class ForgotPasswordActivity : AppCompatActivity() {
     }
 
     private fun sendEmailReset(email: String) {
-        auth.sendPasswordResetEmail(email)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    statusText.text = "Password reset link sent to $email"
-                    Toast.makeText(this, "Check your email", Toast.LENGTH_LONG).show()
-                } else {
-                    statusText.text = "Email failed: ${task.exception?.message}"
-                }
-            }
+        auth.sendPasswordResetEmail(email).addOnCompleteListener { }
     }
 
     private fun verifyAndProceed(credential: PhoneAuthCredential) {
         auth.signInWithCredential(credential)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    statusText.text = "Identity verified! You can now change your password."
-                    Toast.makeText(this, "Verified Successfully", Toast.LENGTH_SHORT).show()
+                    statusText.text = "Identity verified! Please set your new password below."
+                    otpLayout.visibility = View.GONE
+                    newPasswordLayout.visibility = View.VISIBLE
                 } else {
                     Toast.makeText(this, "Invalid verification code", Toast.LENGTH_SHORT).show()
                 }
             }
+    }
+
+    private fun updateAccountPassword(newPass: String) {
+        val user = auth.currentUser
+        user?.updatePassword(newPass)?.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                statusText.text = "Password updated successfully! You can now log in."
+                Toast.makeText(this, "Success! Please Login", Toast.LENGTH_LONG).show()
+                finish()
+            } else {
+                statusText.text = "Update failed: ${task.exception?.message}. Try using the link sent to your email."
+            }
+        }
     }
 }

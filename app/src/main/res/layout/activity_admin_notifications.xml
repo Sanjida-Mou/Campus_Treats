@@ -6,35 +6,34 @@
     android:layout_height="match_parent"
     android:background="@color/light_bg">
 
-    <LinearLayout
-        android:id="@+id/headerLayout"
+    <View
+        android:id="@+id/headerView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@drawable/green_wave_background"
-        android:padding="16dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        app:layout_constraintTop_toTopOf="parent">
+        android:layout_height="120dp"
+        android:background="@drawable/green_curve_background"
+        app:layout_constraintTop_toTopOf="parent" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Order History"
-            android:textColor="#FFFFFF"
-            android:textSize="20sp"
-            android:textStyle="bold" />
-    </LinearLayout>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:text="Notifications"
+        android:textColor="@color/white"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/orderHistoryRecyclerView"
+        android:id="@+id/adminNotificationsRecyclerView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:padding="8dp"
+        android:padding="16dp"
         android:clipToPadding="false"
         app:layout_constraintBottom_toTopOf="@id/bottomNavCard"
-        app:layout_constraintTop_toBottomOf="@id/headerLayout" />
+        app:layout_constraintTop_toBottomOf="@id/headerView" />
 
-    <!-- Bottom Navigation -->
     <androidx.cardview.widget.CardView
         android:id="@+id/bottomNavCard"
         android:layout_width="match_parent"
@@ -58,26 +57,7 @@
                 android:layout_height="28dp"
                 android:layout_weight="1"
                 android:src="@drawable/ic_home"
-                android:contentDescription="Home"
                 app:tint="@color/text_hint" />
-
-            <ImageView
-                android:id="@+id/navCart"
-                android:layout_width="0dp"
-                android:layout_height="28dp"
-                android:layout_weight="1"
-                android:src="@drawable/ic_cart"
-                android:contentDescription="Cart"
-                app:tint="@color/text_hint" />
-
-            <ImageView
-                android:id="@+id/navBookmark"
-                android:layout_width="0dp"
-                android:layout_height="28dp"
-                android:layout_weight="1"
-                android:src="@drawable/ic_bookmark"
-                android:contentDescription="Saved"
-                app:tint="@color/primary_green" />
 
             <FrameLayout
                 android:id="@+id/navNotificationsContainer"
@@ -91,7 +71,7 @@
                     android:layout_height="28dp"
                     android:layout_gravity="center"
                     android:src="@drawable/ic_notifications"
-                    app:tint="@color/text_hint" />
+                    app:tint="@color/primary_green" />
 
                 <TextView
                     android:id="@+id/notificationBadge"
@@ -109,15 +89,6 @@
                     android:textStyle="bold"
                     android:visibility="gone" />
             </FrameLayout>
-
-            <ImageView
-                android:id="@+id/navProfile"
-                android:layout_width="0dp"
-                android:layout_height="28dp"
-                android:layout_weight="1"
-                android:src="@drawable/ic_person"
-                android:contentDescription="Profile"
-                app:tint="@color/text_hint" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 

@@ -13,30 +13,17 @@
         android:background="@drawable/green_curve_background"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <ImageView
-        android:id="@+id/backButton"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:background="@drawable/cart_badge_bg"
-        android:padding="10dp"
-        android:src="@drawable/ic_home"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:tint="@color/primary_green" />
-
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
         android:text="Rate Us"
         android:textColor="@color/white"
         android:textSize="24sp"
         android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="@id/backButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@id/backButton" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
@@ -80,7 +67,7 @@
                         android:layout_marginTop="16dp"
                         android:numStars="5"
                         android:stepSize="1.0"
-                        android:rating="5"
+                        android:isIndicator="false"
                         android:progressTint="@color/accent_yellow" />
 
                     <EditText

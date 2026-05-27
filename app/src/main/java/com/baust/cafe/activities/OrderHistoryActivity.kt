@@ -2,6 +2,7 @@ package com.baust.cafe.activities
 
 import android.os.Bundle
 import android.widget.Toast
+import android.content.Intent
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -12,7 +13,7 @@ import com.baust.cafe.models.Order
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 
-class OrderHistoryActivity : AppCompatActivity() {
+class OrderHistoryActivity : BaseUserActivity() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: OrderAdapter
@@ -35,11 +36,13 @@ class OrderHistoryActivity : AppCompatActivity() {
 
         fetchOrderHistory()
         setupNavigation()
+        
+        setupBottomNavigation(R.id.navCart) // History is mapped to Cart icon in some layouts? Wait, history icon exists.
     }
 
     private fun handleOrderAction(order: Order) {
         when (order.status.lowercase()) {
-            "pending", "preparing" -> {
+            "pending", "preparing", "pending_verification" -> {
                 showCancelOrderDialog(order)
             }
             "ready" -> {
@@ -58,11 +61,26 @@ class OrderHistoryActivity : AppCompatActivity() {
             .setPositiveButton("Cancel Order") { _, _ ->
                 database.child(order.orderId).child("status").setValue("cancelled")
                     .addOnSuccessListener {
+                        saveAdminNotification("Order Cancelled", "@${order.studentName} has cancelled their order", "cancellation")
                         Toast.makeText(this, "Order cancelled successfully", Toast.LENGTH_SHORT).show()
                     }
             }
             .setNegativeButton("No", null)
             .show()
+    }
+
+    private fun saveAdminNotification(title: String, message: String, type: String) {
+        val notifyDb = FirebaseDatabase.getInstance().getReference("AdminNotifications")
+        val id = notifyDb.push().key ?: return
+        val notification = com.baust.cafe.models.AdminNotification(
+            id = id,
+            title = title,
+            message = message,
+            type = type,
+            timestamp = System.currentTimeMillis(),
+            read = false
+        )
+        notifyDb.child(id).setValue(notification)
     }
 
     private fun showDeleteHistoryDialog(order: Order) {
@@ -81,17 +99,18 @@ class OrderHistoryActivity : AppCompatActivity() {
 
     private fun setupNavigation() {
         findViewById<android.widget.ImageView>(R.id.navHome).setOnClickListener {
-            startActivity(android.content.Intent(this, HomeActivity::class.java))
+            startActivity(Intent(this, HomeActivity::class.java))
+            finish()
+        }
+
+        findViewById<android.widget.ImageView>(R.id.navCart).setOnClickListener {
+            startActivity(Intent(this, CartActivity::class.java))
             finish()
         }
 
         findViewById<android.widget.ImageView>(R.id.navBookmark).setOnClickListener {
-            startActivity(android.content.Intent(this, MenuActivity::class.java))
+            startActivity(Intent(this, MenuActivity::class.java))
             finish()
-        }
-
-        findViewById<android.widget.ImageView>(R.id.navHistory).setOnClickListener {
-            // Already on History
         }
 
         findViewById<android.widget.ImageView>(R.id.navNotifications).setOnClickListener {
@@ -99,7 +118,7 @@ class OrderHistoryActivity : AppCompatActivity() {
         }
 
         findViewById<android.widget.ImageView>(R.id.navProfile).setOnClickListener {
-            startActivity(android.content.Intent(this, UserDashboardActivity::class.java))
+            startActivity(Intent(this, UserDashboardActivity::class.java))
             finish()
         }
     }

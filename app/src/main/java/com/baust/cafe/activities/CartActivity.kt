@@ -4,18 +4,13 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.baust.cafe.R
 import com.baust.cafe.adapters.CartAdapter
-import com.baust.cafe.models.Order
-import com.baust.cafe.models.OrderItem
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.FirebaseDatabase
 import java.util.Locale
 
-class CartActivity : AppCompatActivity() {
+class CartActivity : BaseUserActivity() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: CartAdapter
@@ -35,6 +30,8 @@ class CartActivity : AppCompatActivity() {
         checkoutButton.setOnClickListener {
             processCheckout()
         }
+
+        setupBottomNavigation(R.id.navCart)
     }
 
     private fun setupRecyclerView() {

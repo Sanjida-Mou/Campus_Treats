@@ -50,7 +50,7 @@ class OrderAdapter(
 
         // Action Button Logic
         when (order.status.lowercase()) {
-            "pending", "preparing" -> {
+            "pending", "preparing", "pending_verification" -> {
                 holder.actionButton.text = "Cancel Order"
                 holder.actionButton.visibility = View.VISIBLE
                 holder.actionButton.setBackgroundColor(Color.parseColor("#F44336"))
@@ -75,6 +75,7 @@ class OrderAdapter(
         // Status Colors
         when (order.status.lowercase()) {
             "pending" -> holder.orderStatusText.setTextColor(Color.parseColor("#FF9800"))
+            "pending_verification" -> holder.orderStatusText.setTextColor(Color.parseColor("#E91E63"))
             "preparing" -> holder.orderStatusText.setTextColor(Color.parseColor("#2196F3"))
             "ready" -> holder.orderStatusText.setTextColor(Color.parseColor("#4CAF50"))
             "delivered" -> holder.orderStatusText.setTextColor(Color.parseColor("#2E7D32"))

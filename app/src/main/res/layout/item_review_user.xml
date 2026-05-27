@@ -12,11 +12,20 @@
         android:orientation="horizontal"
         android:gravity="center_vertical">
 
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/reviewerProfileImageUser"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:src="@drawable/ic_person"
+            app:civ_border_width="1dp"
+            app:civ_border_color="@color/primary_green" />
+
         <TextView
             android:id="@+id/reviewerNameUser"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:layout_marginStart="12dp"
             android:text="Name"
             android:textColor="@color/text_black"
             android:textStyle="bold"
@@ -40,6 +49,33 @@
         android:textColor="@color/text_black"
         android:textSize="14sp"
         android:alpha="0.8" />
+
+    <LinearLayout
+        android:id="@+id/reviewActionsLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="end"
+        android:layout_marginTop="4dp"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/editReviewBtn"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@android:drawable/ic_menu_edit"
+            app:tint="@color/primary_green"
+            android:padding="4dp" />
+
+        <ImageView
+            android:id="@+id/deleteReviewBtn"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginStart="8dp"
+            android:src="@android:drawable/ic_menu_delete"
+            app:tint="@color/error_red"
+            android:padding="4dp" />
+    </LinearLayout>
 
     <!-- Admin Reply -->
     <LinearLayout

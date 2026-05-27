@@ -12,7 +12,9 @@ data class Order(
     val deliveryOption: String = "pickup", // "pickup" or "delivery"
     val deliveryAddress: String = "",
     val status: String = "pending", // pending, preparing, ready, delivered, cancelled
-    val specialInstructions: String = ""
+    val specialInstructions: String = "",
+    val transactionId: String = "",
+    val paymentStatus: String = "verified" // verified, pending_verification, rejected
 )
 
 // This is a separate data class in the same file

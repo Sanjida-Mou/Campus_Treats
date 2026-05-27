@@ -50,5 +50,12 @@ class AdminLoginActivity : AppCompatActivity() {
                 Toast.makeText(this, "Invalid Admin Credentials", Toast.LENGTH_SHORT).show()
             }
         }
+
+        findViewById<android.widget.ImageView>(R.id.backToWelcomeBtn).setOnClickListener {
+            val intent = Intent(this, WelcomeActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+            finish()
+        }
     }
 }

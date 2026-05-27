@@ -3,6 +3,8 @@ package com.baust.cafe.activities
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.location.Geocoder
+import android.location.Location
 import android.os.Bundle
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
@@ -40,19 +42,27 @@ class CheckoutActivity : AppCompatActivity() {
     private lateinit var mapView: MapView
     private lateinit var btnMyLocation: ImageButton
     private lateinit var deliveryAddressCard: androidx.cardview.widget.CardView
-    private lateinit var tipCard: androidx.cardview.widget.CardView
     private lateinit var advancePaymentText: TextView
+    private lateinit var deliveryChargeText: TextView
     private var marker: Marker? = null
     private var userPhone: String = ""
 
     private var cartItems: ArrayList<CartItem> = arrayListOf()
+    private var subtotal: Double = 0.0
+    private var deliveryCharge: Double = 0.0
     private var totalAmount: Double = 0.0
     private var isPreorder: Boolean = false
+
+    private var verifiedTrxId: String = ""
+    private var selectedPaymentMethod: String = "Cash on Delivery"
+
+    // BAUST Coordinates
+    private val baustLat = 25.7538
+    private val baustLon = 88.9056
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // Load OSM configuration
         Configuration.getInstance().userAgentValue = packageName
         Configuration.getInstance().load(this, getSharedPreferences("osmdroid", MODE_PRIVATE))
         
@@ -63,6 +73,7 @@ class CheckoutActivity : AppCompatActivity() {
         btnMyLocation = findViewById(R.id.btnMyLocation)
         checkoutRecyclerView = findViewById(R.id.checkoutRecyclerView)
         totalAmountText = findViewById(R.id.totalAmount)
+        deliveryChargeText = findViewById(R.id.deliveryChargeText)
         placeOrderButton = findViewById(R.id.placeOrderButton)
         backButton = findViewById(R.id.backButton)
         userNameText = findViewById(R.id.userName)
@@ -71,7 +82,6 @@ class CheckoutActivity : AppCompatActivity() {
         apartmentEdit = findViewById(R.id.checkoutApartment)
         paymentGroup = findViewById(R.id.paymentGroup)
         deliveryAddressCard = findViewById(R.id.deliveryAddressCard)
-        tipCard = findViewById(R.id.tipCard)
         advancePaymentText = findViewById(R.id.advancePaymentText)
 
         // Get data from Intent
@@ -89,22 +99,35 @@ class CheckoutActivity : AppCompatActivity() {
         calculateTotal()
 
         backButton.setOnClickListener { finish() }
-        
-        placeOrderButton.setOnClickListener {
-            placeOrder()
-        }
+        placeOrderButton.setOnClickListener { placeOrder() }
+        btnMyLocation.setOnClickListener { getCurrentLocation() }
 
-        btnMyLocation.setOnClickListener {
-            getCurrentLocation()
+        // Trigger payment dialog immediately on selection
+        paymentGroup.setOnCheckedChangeListener { _, checkedId ->
+            when (checkedId) {
+                R.id.radioBkash -> {
+                    selectedPaymentMethod = "bKash"
+                    showMobilePaymentDialog("bKash")
+                }
+                R.id.radioNagad -> {
+                    selectedPaymentMethod = "Nagad"
+                    showMobilePaymentDialog("Nagad")
+                }
+                R.id.radioCod -> {
+                    selectedPaymentMethod = "Cash on Delivery"
+                    verifiedTrxId = ""
+                }
+            }
         }
     }
 
     private fun setupPreorderUI() {
         deliveryAddressCard.visibility = android.view.View.GONE
-        tipCard.visibility = android.view.View.GONE
         findViewById<RadioButton>(R.id.radioCod).visibility = android.view.View.GONE
-        paymentGroup.check(R.id.radioBkash) // Default to bkash as COD is hidden
+        paymentGroup.check(R.id.radioBkash)
         advancePaymentText.visibility = android.view.View.VISIBLE
+        deliveryCharge = 0.0
+        deliveryChargeText.visibility = android.view.View.GONE
         
         val titleText = findViewById<TextView>(R.id.checkoutTitle)
         if (titleText != null) titleText.text = "Pre-order"
@@ -113,12 +136,10 @@ class CheckoutActivity : AppCompatActivity() {
     private fun setupMap() {
         mapView.setTileSource(TileSourceFactory.MAPNIK)
         mapView.setMultiTouchControls(true)
-        
         val mapController = mapView.controller
         mapController.setZoom(17.0)
         
-        // BAUST University Location
-        val baustPoint = GeoPoint(25.7538, 88.9056)
+        val baustPoint = GeoPoint(baustLat, baustLon)
         mapController.setCenter(baustPoint)
 
         marker = Marker(mapView)
@@ -129,89 +150,108 @@ class CheckoutActivity : AppCompatActivity() {
 
         val mapEventsReceiver = object : MapEventsReceiver {
             override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
-                p?.let {
-                    updateMarkerPosition(it)
-                }
+                p?.let { updateMarkerPosition(it) }
                 return true
             }
-
             override fun longPressHelper(p: GeoPoint?): Boolean = false
         }
-
         mapView.overlays.add(MapEventsOverlay(mapEventsReceiver))
     }
 
     private fun updateMarkerPosition(point: GeoPoint) {
         marker?.position = point
         mapView.invalidate()
-        addressEdit.setText("Location Selected on Map")
+        addressEdit.setText("Fetching address...")
+        
+        calculateDeliveryCharge(point)
+        
+        Thread {
+            try {
+                val geocoder = Geocoder(this, Locale.getDefault())
+                val addresses = geocoder.getFromLocation(point.latitude, point.longitude, 1)
+                runOnUiThread {
+                    if (!addresses.isNullOrEmpty()) {
+                        val address = addresses[0]
+                        val fullAddress = (0..address.maxAddressLineIndex).map { address.getAddressLine(it) }.joinToString(", ")
+                        addressEdit.setText(fullAddress)
+                    } else {
+                        addressEdit.setText("Location Selected on Map")
+                    }
+                }
+            } catch (e: Exception) {
+                runOnUiThread { addressEdit.setText("Location Selected on Map") }
+            }
+        }.start()
+    }
+
+    private fun calculateDeliveryCharge(point: GeoPoint) {
+        if (isPreorder) {
+            deliveryCharge = 0.0
+            updateTotalDisplay()
+            return
+        }
+
+        val results = FloatArray(1)
+        Location.distanceBetween(baustLat, baustLon, point.latitude, point.longitude, results)
+        val distanceKm = results[0] / 1000.0
+
+        deliveryCharge = when {
+            distanceKm <= 2.0 -> 40.0
+            distanceKm <= 5.0 -> 60.0
+            distanceKm <= 8.0 -> 90.0
+            distanceKm <= 12.0 -> 120.0
+            else -> 120.0 + ((distanceKm - 12.0).toInt() + 1) * 10.0
+        }
+        
+        updateTotalDisplay()
     }
 
     private fun getCurrentLocation() {
+        val locationManager = getSystemService(android.content.Context.LOCATION_SERVICE) as android.location.LocationManager
+        if (!locationManager.isProviderEnabled(android.location.LocationManager.GPS_PROVIDER)) {
+            Toast.makeText(this, "Please turn on your GPS/Location", Toast.LENGTH_LONG).show()
+            startActivity(Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+            return
+        }
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 100)
             return
         }
 
         val fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-            location?.let {
-                val userPoint = GeoPoint(it.latitude, it.longitude)
-                mapView.controller.animateTo(userPoint)
-                updateMarkerPosition(userPoint)
-            } ?: Toast.makeText(this, "Could not get location. Is GPS on?", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == 100 && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            getCurrentLocation()
-        }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        mapView.onResume()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        mapView.onPause()
-    }
-
-    private fun setupRecyclerView() {
-        // Reuse CartAdapter but with no callback (read-only for checkout)
-        val adapter = CartAdapter(cartItems) {}
-        checkoutRecyclerView.layoutManager = LinearLayoutManager(this)
-        checkoutRecyclerView.adapter = adapter
-    }
-
-    private fun loadUserDetails() {
-        val user = FirebaseAuth.getInstance().currentUser
-        if (user != null) {
-            userNameText.text = user.displayName ?: "User"
-            userEmailText.text = user.email ?: ""
-            
-            // Try to load extra details from Database
-            FirebaseDatabase.getInstance().getReference("Users").child(user.uid).get().addOnSuccessListener {
-                if (it.exists()) {
-                    val name = it.child("name").value.toString()
-                    userPhone = it.child("phoneNumber").value.toString()
-                    userNameText.text = name
-                    userEmailText.text = "${user.email}\n$userPhone"
+        fusedLocationClient.getCurrentLocation(com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY, null)
+            .addOnSuccessListener { location ->
+                if (location != null) {
+                    val userPoint = GeoPoint(location.latitude, location.longitude)
+                    mapView.controller.animateTo(userPoint)
+                    updateMarkerPosition(userPoint)
+                } else {
+                    fusedLocationClient.lastLocation.addOnSuccessListener { lastLoc ->
+                        if (lastLoc != null) {
+                            val userPoint = GeoPoint(lastLoc.latitude, lastLoc.longitude)
+                            mapView.controller.animateTo(userPoint)
+                            updateMarkerPosition(userPoint)
+                        } else {
+                            Toast.makeText(this, "Still waiting for GPS signal. Please try tapping the map manually.", Toast.LENGTH_LONG).show()
+                        }
+                    }
                 }
             }
-        }
     }
 
     private fun calculateTotal() {
-        totalAmount = cartItems.sumOf { it.price * it.quantity }
+        subtotal = cartItems.sumOf { it.price * it.quantity }
+        updateTotalDisplay()
+    }
+
+    private fun updateTotalDisplay() {
+        totalAmount = subtotal + deliveryCharge
+        deliveryChargeText.text = String.format(Locale.getDefault(), "Delivery: ৳%.0f", deliveryCharge)
         totalAmountText.text = String.format(Locale.getDefault(), "Tk. %.2f", totalAmount)
         
         if (isPreorder) {
-            val advance = totalAmount * 0.20
-            advancePaymentText.text = String.format(Locale.getDefault(), "Advance Payment (20%%): Tk. %.2f", advance)
+            val advance = subtotal * 0.50
+            advancePaymentText.text = String.format(Locale.getDefault(), "Advance Payment (50%%): Tk. %.2f", advance)
         }
     }
 
@@ -229,14 +269,13 @@ class CheckoutActivity : AppCompatActivity() {
              Toast.makeText(this, "Advance payment is required for pre-orders", Toast.LENGTH_SHORT).show()
              return
         }
-        
-        when (selectedPaymentId) {
-            R.id.radioBkash -> showMobilePaymentDialog("bKash")
-            R.id.radioNagad -> showMobilePaymentDialog("Nagad")
-            R.id.radioRocket -> showMobilePaymentDialog("Rocket")
-            R.id.radioCard -> showCardPaymentDialog()
-            else -> finalizeOrder("Cash on Delivery")
+
+        if ((selectedPaymentId == R.id.radioBkash || selectedPaymentId == R.id.radioNagad) && verifiedTrxId.isEmpty()) {
+            showMobilePaymentDialog(if (selectedPaymentId == R.id.radioBkash) "bKash" else "Nagad")
+            return
         }
+        
+        finalizeOrder(selectedPaymentMethod, verifiedTrxId)
     }
 
     private fun showMobilePaymentDialog(method: String) {
@@ -254,89 +293,61 @@ class CheckoutActivity : AppCompatActivity() {
         val cancelBtn = dialog.findViewById<Button>(R.id.cancelPayment)
         val closeBtn = dialog.findViewById<ImageView>(R.id.closeDialog)
 
-        title.text = "Agreement only"
-        label.text = "Your $method Account Number"
+        val amountToPay = if (isPreorder) subtotal * 0.50 else totalAmount
+        val merchantNumber = "01XXXXXXXXX"
+
+        title.text = "Manual Payment"
+        label.text = "1. Send Tk. ${String.format("%.2f", amountToPay)} to $merchantNumber via $method app.\n2. Enter your $method number below:"
         inputField.hint = "e.g 01XXXXXXXXX"
         rights.text = "© 2024 $method, All Rights Reserved"
 
-        var step = 1 // 1: Number, 2: OTP, 3: PIN
-        val simulatedOTP = (1000..9999).random().toString()
+        var step = 1
+        var senderNumber = ""
 
         when (method) {
             "bKash" -> background.setBackgroundColor(getColor(R.color.bkash_pink))
             "Nagad" -> background.setBackgroundColor(getColor(R.color.nagad_orange))
-            "Rocket" -> background.setBackgroundColor(getColor(R.color.rocket_purple))
         }
 
         confirmBtn.setOnClickListener {
             val input = inputField.text.toString().trim()
-
             when (step) {
-                1 -> { // Number Step
+                1 -> {
                     if (input.length >= 11) {
+                        senderNumber = input
                         step = 2
-                        label.text = "Enter OTP sent to $input"
+                        label.text = "Enter the Transaction ID (TrxID) from your $method message:"
                         inputField.setText("")
-                        inputField.hint = "Enter 4-digit OTP"
-                        inputField.inputType = android.text.InputType.TYPE_CLASS_NUMBER
-                        bottomInstruction.text = "Please enter the code sent to your phone"
-                        Toast.makeText(this, "Simulated OTP: $simulatedOTP", Toast.LENGTH_LONG).show()
+                        inputField.hint = "e.g. A1B2C3D4"
+                        inputField.inputType = android.text.InputType.TYPE_CLASS_TEXT
+                        bottomInstruction.text = "We will verify this manually"
                     } else {
                         Toast.makeText(this, "Enter valid $method number", Toast.LENGTH_SHORT).show()
                     }
                 }
-                2 -> { // OTP Step
-                    if (input == simulatedOTP) {
-                        step = 3
-                        label.text = "Enter your $method PIN"
-                        inputField.setText("")
-                        inputField.hint = "Enter PIN"
-                        inputField.inputType = android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD
-                        bottomInstruction.text = "Confirm and proceed"
-                    } else {
-                        Toast.makeText(this, "Incorrect OTP", Toast.LENGTH_SHORT).show()
-                    }
-                }
-                3 -> { // PIN Step
-                    if (input.length >= 4) {
+                2 -> {
+                    if (input.isNotEmpty()) {
+                        verifiedTrxId = input
                         dialog.dismiss()
-                        finalizeOrder(method)
+                        Toast.makeText(this, "TrxID saved. You can now place your order.", Toast.LENGTH_LONG).show()
                     } else {
-                        Toast.makeText(this, "Enter valid PIN", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, "Please enter Transaction ID", Toast.LENGTH_SHORT).show()
                     }
                 }
             }
         }
-
-        cancelBtn.setOnClickListener { dialog.dismiss() }
-        closeBtn.setOnClickListener { dialog.dismiss() }
-
-        dialog.show()
-    }
-
-    private fun showCardPaymentDialog() {
-        val dialog = android.app.Dialog(this)
-        dialog.setContentView(R.layout.dialog_card_payment)
-        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
-
-        val payBtn = dialog.findViewById<Button>(R.id.payCardButton)
-        val cancelBtn = dialog.findViewById<Button>(R.id.cancelCardButton)
-
-        payBtn.setOnClickListener {
-            val cardNum = dialog.findViewById<EditText>(R.id.cardNumber).text.toString()
-            if (cardNum.length >= 16) {
-                dialog.dismiss()
-                finalizeOrder("Credit Card")
-            } else {
-                Toast.makeText(this, "Enter valid card details", Toast.LENGTH_SHORT).show()
-            }
+        cancelBtn.setOnClickListener { 
+            paymentGroup.check(R.id.radioCod)
+            dialog.dismiss() 
         }
-
-        cancelBtn.setOnClickListener { dialog.dismiss() }
+        closeBtn.setOnClickListener { 
+            paymentGroup.check(R.id.radioCod)
+            dialog.dismiss() 
+        }
         dialog.show()
     }
 
-    private fun finalizeOrder(paymentMethod: String) {
+    private fun finalizeOrder(paymentMethod: String, trxId: String = "") {
         val address = if (isPreorder) "Pickup from Cafe" else addressEdit.text.toString().trim()
         val auth = FirebaseAuth.getInstance()
         val userId = auth.currentUser?.uid ?: return
@@ -344,12 +355,7 @@ class CheckoutActivity : AppCompatActivity() {
         val orderId = database.push().key ?: return
 
         val orderItems = cartItems.map {
-            OrderItem(
-                itemId = it.itemId,
-                itemName = it.itemName,
-                quantity = it.quantity,
-                price = it.price
-            )
+            OrderItem(itemId = it.itemId, itemName = it.itemName, quantity = it.quantity, price = it.price)
         }
 
         val order = Order(
@@ -361,13 +367,17 @@ class CheckoutActivity : AppCompatActivity() {
             totalAmount = totalAmount,
             deliveryAddress = address,
             deliveryOption = if (isPreorder) "pickup" else "delivery",
-            status = "pending",
-            specialInstructions = if (isPreorder) "Pre-order (Paid 20%): $paymentMethod" else "Payment: $paymentMethod"
+            status = if (trxId.isNotEmpty()) "pending_verification" else "pending",
+            specialInstructions = if (isPreorder) "Pre-order (Paid 50%): $paymentMethod" else "Payment: $paymentMethod",
+            transactionId = trxId,
+            paymentStatus = if (trxId.isNotEmpty()) "pending_verification" else "verified"
         )
 
         placeOrderButton.isEnabled = false
         database.child(orderId).setValue(order)
             .addOnSuccessListener {
+                val currentUserName = userNameText.text.toString().split(" - ")[0]
+                saveAdminNotification("New Order Received!", "@$currentUserName ordered food - Tk $totalAmount", "order")
                 Toast.makeText(this, "Order placed successfully via $paymentMethod!", Toast.LENGTH_LONG).show()
                 val intent = Intent(this, HomeActivity::class.java)
                 intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
@@ -378,5 +388,42 @@ class CheckoutActivity : AppCompatActivity() {
                 placeOrderButton.isEnabled = true
                 Toast.makeText(this, "Failed: ${it.message}", Toast.LENGTH_SHORT).show()
             }
+    }
+
+    private fun saveAdminNotification(title: String, message: String, type: String) {
+        val notifyDb = FirebaseDatabase.getInstance().getReference("AdminNotifications")
+        val id = notifyDb.push().key ?: return
+        val notification = com.baust.cafe.models.AdminNotification(
+            id = id,
+            title = title,
+            message = message,
+            type = type,
+            timestamp = System.currentTimeMillis(),
+            read = false
+        )
+        notifyDb.child(id).setValue(notification)
+    }
+
+    override fun onResume() { super.onResume(); mapView.onResume() }
+    override fun onPause() { super.onPause(); mapView.onPause() }
+    private fun setupRecyclerView() {
+        val adapter = CartAdapter(cartItems) {}
+        checkoutRecyclerView.layoutManager = LinearLayoutManager(this)
+        checkoutRecyclerView.adapter = adapter
+    }
+    private fun loadUserDetails() {
+        val user = FirebaseAuth.getInstance().currentUser
+        if (user != null) {
+            userNameText.text = user.displayName ?: "User"
+            userEmailText.text = user.email ?: ""
+            FirebaseDatabase.getInstance().getReference("Users").child(user.uid).get().addOnSuccessListener {
+                if (it.exists()) {
+                    val name = it.child("name").value.toString()
+                    userPhone = it.child("phoneNumber").value.toString()
+                    userNameText.text = name
+                    userEmailText.text = "${user.email}\n$userPhone"
+                }
+            }
+        }
     }
 }

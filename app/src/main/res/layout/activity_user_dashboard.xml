@@ -309,6 +309,14 @@
                 app:tint="@color/text_hint" />
 
             <ImageView
+                android:id="@+id/navCart"
+                android:layout_width="0dp"
+                android:layout_height="28dp"
+                android:layout_weight="1"
+                android:src="@drawable/ic_cart"
+                app:tint="@color/text_hint" />
+
+            <ImageView
                 android:id="@+id/navBookmark"
                 android:layout_width="0dp"
                 android:layout_height="28dp"
@@ -316,21 +324,36 @@
                 android:src="@drawable/ic_bookmark"
                 app:tint="@color/text_hint" />
 
-            <ImageView
-                android:id="@+id/navHistory"
+            <FrameLayout
+                android:id="@+id/navNotificationsContainer"
                 android:layout_width="0dp"
-                android:layout_height="28dp"
-                android:layout_weight="1"
-                android:src="@drawable/ic_history"
-                app:tint="@color/text_hint" />
+                android:layout_height="match_parent"
+                android:layout_weight="1">
 
-            <ImageView
-                android:id="@+id/navNotifications"
-                android:layout_width="0dp"
-                android:layout_height="28dp"
-                android:layout_weight="1"
-                android:src="@drawable/ic_notifications"
-                app:tint="@color/text_hint" />
+                <ImageView
+                    android:id="@+id/navNotifications"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_notifications"
+                    app:tint="@color/text_hint" />
+
+                <TextView
+                    android:id="@+id/notificationBadge"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_gravity="center"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginBottom="10dp"
+                    android:background="@drawable/cart_badge_bg"
+                    android:backgroundTint="@color/error_red"
+                    android:gravity="center"
+                    android:text="1"
+                    android:textColor="@color/white"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+            </FrameLayout>
 
             <ImageView
                 android:id="@+id/navProfile"

@@ -38,28 +38,28 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <LinearLayout
-            android:id="@+id/cartIcon"
+            android:id="@+id/totalSpentLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/cart_badge_bg"
-            android:clickable="true"
-            android:focusable="true"
             android:gravity="center_vertical"
-            android:paddingHorizontal="10dp"
-            android:paddingVertical="6dp">
-
-            <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:src="@drawable/ic_cart"
-                app:tint="@color/primary_green" />
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="8dp">
 
             <TextView
-                android:id="@+id/cartCountText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
-                android:text="4"
+                android:text="৳"
+                android:textColor="@color/primary_green"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/totalSpentText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:text="0.00"
                 android:textColor="@color/primary_green"
                 android:textSize="14sp"
                 android:textStyle="bold" />
@@ -220,6 +220,15 @@
                 app:tint="@color/primary_green" />
 
             <ImageView
+                android:id="@+id/navCart"
+                android:layout_width="0dp"
+                android:layout_height="28dp"
+                android:layout_weight="1"
+                android:src="@drawable/ic_cart"
+                android:contentDescription="Cart"
+                app:tint="@color/text_hint" />
+
+            <ImageView
                 android:id="@+id/navBookmark"
                 android:layout_width="0dp"
                 android:layout_height="28dp"
@@ -228,23 +237,36 @@
                 android:contentDescription="Saved"
                 app:tint="@color/text_hint" />
 
-            <ImageView
-                android:id="@+id/navHistory"
+            <FrameLayout
+                android:id="@+id/navNotificationsContainer"
                 android:layout_width="0dp"
-                android:layout_height="28dp"
-                android:layout_weight="1"
-                android:src="@drawable/ic_history"
-                android:contentDescription="Orders"
-                app:tint="@color/text_hint" />
+                android:layout_height="match_parent"
+                android:layout_weight="1">
 
-            <ImageView
-                android:id="@+id/navNotifications"
-                android:layout_width="0dp"
-                android:layout_height="28dp"
-                android:layout_weight="1"
-                android:src="@drawable/ic_notifications"
-                android:contentDescription="Notifications"
-                app:tint="@color/text_hint" />
+                <ImageView
+                    android:id="@+id/navNotifications"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_notifications"
+                    app:tint="@color/text_hint" />
+
+                <TextView
+                    android:id="@+id/notificationBadge"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_gravity="center"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginBottom="10dp"
+                    android:background="@drawable/cart_badge_bg"
+                    android:backgroundTint="@color/error_red"
+                    android:gravity="center"
+                    android:text="1"
+                    android:textColor="@color/white"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+            </FrameLayout>
 
             <ImageView
                 android:id="@+id/navProfile"

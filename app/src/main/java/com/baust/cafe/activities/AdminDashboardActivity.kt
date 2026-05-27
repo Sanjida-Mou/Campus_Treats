@@ -2,10 +2,9 @@ package com.baust.cafe.activities
 
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import com.baust.cafe.R
+import com.baust.cafe.models.AdminNotification
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -15,21 +14,23 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.google.firebase.database.*
 
-class AdminDashboardActivity : AppCompatActivity() {
+class AdminDashboardActivity : BaseAdminActivity() {
 
     private lateinit var database: DatabaseReference
-    private var isFirstLoad = true
+    private var startTime: Long = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_admin_dashboard)
 
-        // Initialize Firebase and start listening for orders
+        startTime = System.currentTimeMillis()
+
+        // Initialize Firebase
         database = FirebaseDatabase.getInstance().getReference("Orders")
         setupOrderListener()
+        setupReviewListener()
 
         val manageMenuCard = findViewById<CardView>(R.id.manageMenuCard)
-        // ...
         val viewOrdersCard = findViewById<CardView>(R.id.viewOrdersCard)
         val viewReviewsCard = findViewById<CardView>(R.id.viewReviewsCard)
         val adminLogoutCard = findViewById<CardView>(R.id.adminLogoutCard)
@@ -50,53 +51,77 @@ class AdminDashboardActivity : AppCompatActivity() {
             startActivity(Intent(this, AdminLoginActivity::class.java))
             finish()
         }
+
+        setupBottomNavigation(R.id.navHome)
     }
 
     private fun setupOrderListener() {
-        database.addChildEventListener(object : ChildEventListener {
-            override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
-                if (!isFirstLoad) {
-                    val customerName = snapshot.child("studentName").value.toString()
-                    val total = snapshot.child("totalAmount").value.toString()
-                    showNotification("New Order Received!", "Customer: $customerName - Tk $total")
+        database.orderByChild("orderTime").startAt(startTime.toDouble())
+            .addChildEventListener(object : ChildEventListener {
+                override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
+                    val orderTime = snapshot.child("orderTime").getValue(Long::class.java) ?: 0
+                    if (orderTime >= startTime) {
+                        val customerName = snapshot.child("studentName").value.toString()
+                        val total = snapshot.child("totalAmount").value.toString()
+                        showNotification("New Order Received!", "@$customerName ordered food - Tk $total", ViewOrdersActivity::class.java)
+                    }
                 }
-            }
 
-            override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {
-                if (!isFirstLoad) {
+                override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {
                     val status = snapshot.child("status").value.toString()
                     val customerName = snapshot.child("studentName").value.toString()
                     if (status == "cancelled") {
-                        showNotification("Order Cancelled", "$customerName has cancelled their order")
+                        val title = "Order Cancelled"
+                        val message = "@$customerName has cancelled their order"
+                        showNotification(title, message, ViewOrdersActivity::class.java)
+
+                        // Save cancellation notification
+                        val notifyDb = FirebaseDatabase.getInstance().getReference("AdminNotifications")
+                        val id = notifyDb.push().key
+                        if (id != null) {
+                            val notification = AdminNotification(id, title, message, "cancellation", System.currentTimeMillis(), read = false)
+                            notifyDb.child(id).setValue(notification)
+                        }
                     }
                 }
-            }
 
-            override fun onChildRemoved(snapshot: DataSnapshot) {}
-            override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {}
-            override fun onCancelled(error: DatabaseError) {}
-        })
-
-        // Skip existing orders on first load
-        database.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                isFirstLoad = false
-            }
-            override fun onCancelled(error: DatabaseError) {}
-        })
+                override fun onChildRemoved(snapshot: DataSnapshot) {}
+                override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {}
+                override fun onCancelled(error: DatabaseError) {}
+            })
     }
 
-    private fun showNotification(title: String, message: String) {
-        val channelId = "admin_orders"
+    private fun setupReviewListener() {
+        val reviewDb = FirebaseDatabase.getInstance().getReference("Reviews")
+        reviewDb.orderByChild("timestamp").startAt(startTime.toDouble())
+            .addChildEventListener(object : ChildEventListener {
+                override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
+                    val timestamp = snapshot.child("timestamp").getValue(Long::class.java) ?: 0
+                    if (timestamp >= startTime) {
+                        val reviewerName = snapshot.child("studentName").value.toString()
+                        val itemName = snapshot.child("itemName").value.toString()
+                        val foodOrGeneral = if (itemName.isEmpty() || itemName == "null") "Cafe" else itemName
+                        showNotification("New Review Received!", "@$reviewerName sent a review for $foodOrGeneral", ViewReviewsActivity::class.java)
+                    }
+                }
+                override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {}
+                override fun onChildRemoved(snapshot: DataSnapshot) {}
+                override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {}
+                override fun onCancelled(error: DatabaseError) {}
+            })
+    }
+
+    private fun showNotification(title: String, message: String, targetActivity: Class<*>) {
+        val channelId = "admin_alerts"
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(channelId, "Order Notifications", NotificationManager.IMPORTANCE_HIGH)
+            val channel = NotificationChannel(channelId, "Admin Notifications", NotificationManager.IMPORTANCE_HIGH)
             notificationManager.createNotificationChannel(channel)
         }
 
-        val intent = Intent(this, ViewOrdersActivity::class.java)
-        val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+        val intent = Intent(this, targetActivity)
+        val pendingIntent = PendingIntent.getActivity(this, System.currentTimeMillis().toInt(), intent, PendingIntent.FLAG_IMMUTABLE)
 
         val notification = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(R.drawable.ic_notifications)

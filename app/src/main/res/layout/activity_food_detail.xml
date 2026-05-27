@@ -15,7 +15,7 @@
         android:layout_marginTop="24dp"
         android:background="@drawable/cart_badge_bg"
         android:padding="10dp"
-        android:src="@drawable/ic_home"
+        android:src="@android:drawable/ic_menu_revert"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:tint="@color/primary_green" />
@@ -142,46 +142,6 @@
                         app:tint="@color/white" />
                 </LinearLayout>
 
-                <!-- Stats Row -->
-                <LinearLayout
-                    android:id="@+id/statsRow"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="24dp"
-                    android:gravity="center"
-                    android:orientation="horizontal"
-                    app:layout_constraintTop_toBottomOf="@id/detailFoodPrice">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="20dp"
-                        android:drawablePadding="8dp"
-                        android:text="4.5"
-                        android:textColor="@color/text_hint"
-                        app:drawableStartCompat="@android:drawable/btn_star_big_on"
-                        app:drawableTint="@color/accent_yellow" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="20dp"
-                        android:drawablePadding="8dp"
-                        android:text="100 Kcal"
-                        android:textColor="@color/text_hint"
-                        app:drawableStartCompat="@android:drawable/ic_menu_info_details"
-                        app:drawableTint="@color/error_red" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:drawablePadding="8dp"
-                        android:text="20 Min"
-                        android:textColor="@color/text_hint"
-                        app:drawableStartCompat="@android:drawable/ic_menu_recent_history"
-                        app:drawableTint="@color/accent_yellow" />
-                </LinearLayout>
-
                 <TextView
                     android:id="@+id/aboutTitle"
                     android:layout_width="wrap_content"
@@ -192,7 +152,7 @@
                     android:textSize="18sp"
                     android:textStyle="bold"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/statsRow" />
+                    app:layout_constraintTop_toBottomOf="@id/detailFoodPrice" />
 
                 <TextView
                     android:id="@+id/detailFoodDesc"
@@ -211,8 +171,6 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:layout_marginTop="32dp"
-                    android:layout_marginBottom="48dp"
-                    app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/detailFoodDesc">
 
                     <LinearLayout
@@ -255,6 +213,75 @@
                         android:textColor="@color/white"
                         android:textStyle="bold" />
                 </LinearLayout>
+
+                <!-- Reviews Section -->
+                <View
+                    android:id="@+id/reviewDivider"
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#EEEEEE"
+                    android:layout_marginTop="32dp"
+                    app:layout_constraintTop_toBottomOf="@id/buttonLayout"/>
+
+                <TextView
+                    android:id="@+id/reviewHeader"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="Share your thoughts"
+                    android:textColor="@color/text_black"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/reviewDivider" />
+
+                <RatingBar
+                    android:id="@+id/detailRatingBar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:numStars="5"
+                    android:progressTint="@color/accent_yellow"
+                    android:stepSize="1.0"
+                    android:isIndicator="false"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/reviewHeader" />
+
+                <EditText
+                    android:id="@+id/detailReviewComment"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/edit_text_background"
+                    android:hint="Write your review..."
+                    android:inputType="textMultiLine"
+                    android:minLines="2"
+                    android:padding="12dp"
+                    android:textSize="14sp"
+                    android:textColor="@color/text_black"
+                    app:layout_constraintTop_toBottomOf="@id/detailRatingBar" />
+
+                <Button
+                    android:id="@+id/submitDetailReviewBtn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:backgroundTint="@color/primary_green"
+                    android:text="Submit Review"
+                    android:textAllCaps="false"
+                    android:textColor="@color/white"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/detailReviewComment" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/detailReviewsRecyclerView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="32dp"
+                    android:nestedScrollingEnabled="false"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/submitDetailReviewBtn" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.core.widget.NestedScrollView>

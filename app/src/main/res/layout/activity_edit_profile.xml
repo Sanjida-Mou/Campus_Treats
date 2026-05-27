@@ -147,18 +147,18 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="20dp"
-                    android:text="OR PASTE PROFILE IMAGE URL"
+                    android:text="STUDENT ID"
                     android:textColor="@color/text_black"
                     android:textSize="12sp"
                     android:textStyle="bold" />
 
                 <EditText
-                    android:id="@+id/editProfileImageUrl"
+                    android:id="@+id/editStudentId"
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
                     android:layout_marginTop="8dp"
                     android:background="@drawable/edit_text_background"
-                    android:hint="Paste Image URL here"
+                    android:hint="Enter Student ID"
                     android:paddingHorizontal="16dp"
                     android:textColor="@color/text_black" />
 

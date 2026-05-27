@@ -19,8 +19,8 @@
             android:textColor="@color/text_black"
             android:textSize="24sp"
             android:textStyle="bold"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent"/>
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <androidx.cardview.widget.CardView
             android:id="@+id/imageCard"
@@ -117,7 +117,7 @@
             android:layout_height="56dp"
             android:layout_marginTop="16dp"
             android:background="@drawable/edit_text_background"
-            android:hint="Category (e.g. Burger, Pizza)"
+            android:hint="Category"
             android:paddingHorizontal="16dp"
             android:textColor="@color/text_black"
             android:textColorHint="@color/text_hint"

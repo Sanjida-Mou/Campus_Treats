@@ -27,7 +27,7 @@ class EditProfileActivity : AppCompatActivity() {
     private lateinit var editName: EditText
     private lateinit var editPhone: EditText
     private lateinit var editLocation: EditText
-    private lateinit var editProfileImageUrl: EditText
+    private lateinit var editStudentId: EditText
     private lateinit var saveButton: Button
     private lateinit var backButton: ImageView
     private lateinit var changeImageFab: FloatingActionButton
@@ -52,7 +52,7 @@ class EditProfileActivity : AppCompatActivity() {
         editName = findViewById(R.id.editName)
         editPhone = findViewById(R.id.editPhone)
         editLocation = findViewById(R.id.editLocation)
-        editProfileImageUrl = findViewById(R.id.editProfileImageUrl)
+        editStudentId = findViewById(R.id.editStudentId)
         saveButton = findViewById(R.id.saveProfileButton)
         backButton = findViewById(R.id.backButton)
         changeImageFab = findViewById(R.id.changeImageFab)
@@ -85,7 +85,6 @@ class EditProfileActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == PICK_IMAGE_REQUEST && resultCode == Activity.RESULT_OK && data != null && data.data != null) {
             selectedImageUri = data.data
-            editProfileImageUrl.setText("") // Clear URL if local picked
             profileImageView.setImageURI(selectedImageUri)
         }
     }
@@ -99,6 +98,7 @@ class EditProfileActivity : AppCompatActivity() {
                     editName.setText(it.name)
                     editPhone.setText(it.phoneNumber)
                     editLocation.setText(it.location)
+                    editStudentId.setText(it.studentId)
                     
                     if (it.profileImage.isNotEmpty()) {
                         if (it.profileImage.startsWith("http")) {
@@ -124,6 +124,7 @@ class EditProfileActivity : AppCompatActivity() {
         val name = editName.text.toString().trim()
         val phone = editPhone.text.toString().trim()
         val location = editLocation.text.toString().trim()
+        val studentId = editStudentId.text.toString().trim()
 
         if (name.isEmpty()) {
             Toast.makeText(this, "Name cannot be empty", Toast.LENGTH_SHORT).show()
@@ -145,41 +146,22 @@ class EditProfileActivity : AppCompatActivity() {
                 val byteArray = outputStream.toByteArray()
                 val base64Image = android.util.Base64.encodeToString(byteArray, android.util.Base64.DEFAULT)
                 
-                saveToDatabase(userId, name, phone, location, base64Image)
+                saveToDatabase(userId, name, phone, location, studentId, base64Image)
             } catch (e: Exception) {
                 progressDialog.dismiss()
                 Toast.makeText(this, "Error processing image: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         } else {
-            saveToDatabase(userId, name, phone, location, currentUser?.profileImage ?: "")
+            saveToDatabase(userId, name, phone, location, studentId, currentUser?.profileImage ?: "")
         }
     }
 
-    private fun uploadImageAndSave(userId: String, name: String, phone: String, location: String) {
-        val storageRef = storage.getReference("profile_images").child("$userId.jpg")
-        
-        storageRef.putFile(selectedImageUri!!)
-            .addOnSuccessListener { taskSnapshot ->
-                taskSnapshot.storage.downloadUrl.addOnSuccessListener { uri ->
-                    saveToDatabase(userId, name, phone, location, uri.toString())
-                }
-            }
-            .addOnFailureListener { e ->
-                progressDialog.dismiss()
-                val msg = if (e is StorageException && e.errorCode == StorageException.ERROR_NOT_AUTHORIZED) {
-                    "Permission Denied. Please use the 'Paste URL' method."
-                } else {
-                    e.localizedMessage
-                }
-                Toast.makeText(this, "Upload failed: $msg", Toast.LENGTH_LONG).show()
-            }
-    }
-
-    private fun saveToDatabase(userId: String, name: String, phone: String, location: String, imageUrl: String) {
+    private fun saveToDatabase(userId: String, name: String, phone: String, location: String, studentId: String, imageUrl: String) {
         val updates = HashMap<String, Any>()
         updates["name"] = name
         updates["phoneNumber"] = phone
         updates["location"] = location
+        updates["studentId"] = studentId
         updates["profileImage"] = imageUrl
 
         database.getReference("Users").child(userId).updateChildren(updates)

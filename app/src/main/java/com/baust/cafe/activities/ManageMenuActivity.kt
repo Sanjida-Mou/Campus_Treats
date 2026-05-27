@@ -2,17 +2,15 @@ package com.baust.cafe.activities
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
-import com.baust.cafe.R
-
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.baust.cafe.R
 import com.baust.cafe.adapters.MenuAdapter
 import com.baust.cafe.models.MenuItem
+import com.baust.cafe.models.UserNotification
 import com.google.firebase.database.*
 import android.widget.Toast
 
-class ManageMenuActivity : AppCompatActivity() {
+class ManageMenuActivity : BaseAdminActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: MenuAdapter
     private val menuItemsList = mutableListOf<MenuItem>()
@@ -23,7 +21,6 @@ class ManageMenuActivity : AppCompatActivity() {
         setContentView(R.layout.activity_manage_menu)
 
         recyclerView = findViewById(R.id.manageMenuRecyclerView)
-        // Set to 2-column Grid for Admin too
         recyclerView.layoutManager = androidx.recyclerview.widget.GridLayoutManager(this, 2)
 
         adapter = MenuAdapter(
@@ -52,6 +49,7 @@ class ManageMenuActivity : AppCompatActivity() {
         }
 
         fetchMenuData()
+        setupBottomNavigation(0)
     }
 
     private fun fetchMenuData() {
@@ -77,6 +75,32 @@ class ManageMenuActivity : AppCompatActivity() {
             .addOnSuccessListener {
                 val status = if (isAvailable) "Available" else "Out of Stock"
                 Toast.makeText(this, "${item.name} is now $status", Toast.LENGTH_SHORT).show()
+                
+                // BROADCAST NOTIFICATION TO ALL USERS
+                broadcastStockUpdate(item.name, isAvailable)
             }
+    }
+
+    private fun broadcastStockUpdate(itemName: String, isAvailable: Boolean) {
+        val usersDb = FirebaseDatabase.getInstance().getReference("Users")
+        val statusText = if (isAvailable) "is now AVAILABLE!" else "is currently OUT OF STOCK"
+        val message = "$itemName $statusText"
+        
+        usersDb.get().addOnSuccessListener { snapshot ->
+            for (userSnapshot in snapshot.children) {
+                val userId = userSnapshot.key ?: continue
+                val notifyDb = FirebaseDatabase.getInstance().getReference("UserNotifications").child(userId)
+                val id = notifyDb.push().key ?: continue
+                val notification = UserNotification(
+                    id = id,
+                    title = "Food Availability Update",
+                    message = message,
+                    type = "stock",
+                    timestamp = System.currentTimeMillis(),
+                    read = false
+                )
+                notifyDb.child(id).setValue(notification)
+            }
+        }
     }
 }

@@ -6,7 +6,6 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import com.baust.cafe.R
 import com.baust.cafe.models.User
@@ -16,7 +15,7 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 
-class UserDashboardActivity : AppCompatActivity() {
+class UserDashboardActivity : BaseUserActivity() {
 
     private lateinit var auth: FirebaseAuth
     private lateinit var welcomeUserText: TextView
@@ -64,41 +63,34 @@ class UserDashboardActivity : AppCompatActivity() {
 
         setupNavigation()
         loadUserData()
+        
+        setupBottomNavigation(R.id.navProfile)
     }
 
     private fun setupNavigation() {
-        findViewById<android.widget.ImageView>(R.id.navHome).setOnClickListener {
+        findViewById<android.widget.ImageView>(R.id.navHome)?.setOnClickListener {
             startActivity(Intent(this, HomeActivity::class.java))
             finish()
         }
 
-        findViewById<android.widget.ImageView>(R.id.navBookmark).setOnClickListener {
+        findViewById<android.widget.ImageView>(R.id.navCart)?.setOnClickListener {
+            startActivity(Intent(this, CartActivity::class.java))
+            finish()
+        }
+
+        findViewById<android.widget.ImageView>(R.id.navBookmark)?.setOnClickListener {
             startActivity(Intent(this, MenuActivity::class.java))
             finish()
         }
 
-        findViewById<android.widget.ImageView>(R.id.navHistory).setOnClickListener {
-            startActivity(Intent(this, OrderHistoryActivity::class.java))
+        findViewById<android.widget.ImageView>(R.id.navNotifications)?.setOnClickListener {
+            startActivity(Intent(this, UserNotificationsActivity::class.java))
             finish()
         }
 
-        findViewById<android.widget.ImageView>(R.id.navNotifications).setOnClickListener {
-            Toast.makeText(this, "No new notifications", Toast.LENGTH_SHORT).show()
-        }
-
-        findViewById<android.widget.ImageView>(R.id.navProfile).setOnClickListener {
+        findViewById<android.widget.ImageView>(R.id.navProfile)?.setOnClickListener {
             // Already on Profile
         }
-    }
-
-    private fun showProfileDialog() {
-        currentUser?.let { user ->
-            val builder = AlertDialog.Builder(this)
-            builder.setTitle("My Profile")
-            builder.setMessage("Name: ${user.name}\nEmail: ${user.email}\nStudent ID: ${user.studentId}\nLocation: ${if(user.location.isEmpty()) "Not Set" else user.location}\nTotal Spent: $${String.format("%.2f", user.totalSpent)}")
-            builder.setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
-            builder.show()
-        } ?: Toast.makeText(this, "Loading user data...", Toast.LENGTH_SHORT).show()
     }
 
     private fun showLogoutDialog() {
@@ -120,7 +112,6 @@ class UserDashboardActivity : AppCompatActivity() {
         val user = auth.currentUser ?: return
         val database = FirebaseDatabase.getInstance().getReference("Users").child(user.uid)
 
-        // Default from Auth
         welcomeUserText.text = "Welcome back, ${user.displayName ?: "User"}"
 
         database.addValueEventListener(object : ValueEventListener {

@@ -112,6 +112,16 @@
             android:name=".activities.RateUsActivity"
             android:exported="false" />
 
+        <!-- Admin Notifications Activity -->
+        <activity
+            android:name=".activities.AdminNotificationsActivity"
+            android:exported="false" />
+
+        <!-- User Notifications Activity -->
+        <activity
+            android:name=".activities.UserNotificationsActivity"
+            android:exported="false" />
+
     </application>
 
 </manifest>

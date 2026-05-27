@@ -17,7 +17,8 @@ import java.util.Locale
 class AdminOrderAdapter(
     private var orders: List<Order>,
     private val onUpdateStatus: (Order) -> Unit,
-    private val onHandleCancellation: (Order) -> Unit,
+    private val onVerifyPayment: (Order) -> Unit,
+    private val onRejectPayment: (Order) -> Unit,
     private val onUserClick: (String) -> Unit
 ) : RecyclerView.Adapter<AdminOrderAdapter.ViewHolder>() {
 
@@ -27,10 +28,12 @@ class AdminOrderAdapter(
         val items: TextView = view.findViewById(R.id.orderItems)
         val address: TextView = view.findViewById(R.id.orderAddress)
         val payment: TextView = view.findViewById(R.id.orderPayment)
+        val trxId: TextView = view.findViewById(R.id.orderTrxId)
         val total: TextView = view.findViewById(R.id.orderTotal)
         val status: TextView = view.findViewById(R.id.orderStatusAdmin)
         val btnUpdateStatus: Button = view.findViewById(R.id.btnUpdateStatus)
-        val btnHandleCancellation: Button = view.findViewById(R.id.btnHandleCancellation)
+        val btnVerifyPayment: Button = view.findViewById(R.id.btnVerifyPayment)
+        val btnRejectPayment: Button = view.findViewById(R.id.btnRejectPayment)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -69,14 +72,33 @@ class AdminOrderAdapter(
         holder.items.text = "Items: $itemsText"
         
         holder.address.text = "Location: ${order.deliveryAddress}"
-        holder.payment.text = order.specialInstructions // We stored payment method here
-        holder.total.text = String.format(Locale.getDefault(), "Total: Tk %.2f", order.totalAmount)
         
+        // Payment Info & Status
+        val payMethod = order.specialInstructions
+        holder.payment.text = payMethod
+        
+        if (order.transactionId.isNotEmpty()) {
+            holder.trxId.text = "TrxID: ${order.transactionId} [${order.paymentStatus.replace("_", " ").uppercase()}]"
+            holder.trxId.visibility = View.VISIBLE
+            
+            if (order.paymentStatus == "pending_verification") {
+                holder.trxId.setTextColor(Color.parseColor("#E91E63")) // Pink for alert
+            } else if (order.paymentStatus == "rejected") {
+                holder.trxId.setTextColor(Color.RED)
+            } else {
+                holder.trxId.setTextColor(Color.parseColor("#2E7D32")) // Green for verified
+            }
+        } else {
+            holder.trxId.visibility = View.GONE
+        }
+
+        holder.total.text = String.format(Locale.getDefault(), "Total: Tk %.2f", order.totalAmount)
         holder.status.text = order.status.replace("_", " ").uppercase()
 
         // Status Colors
         when (order.status.lowercase()) {
             "pending" -> holder.status.setTextColor(Color.parseColor("#FF9800"))
+            "pending_verification" -> holder.status.setTextColor(Color.parseColor("#E91E63"))
             "preparing" -> holder.status.setTextColor(Color.parseColor("#2196F3"))
             "ready" -> holder.status.setTextColor(Color.parseColor("#4CAF50"))
             "delivered" -> holder.status.setTextColor(Color.parseColor("#2E7D32"))
@@ -84,24 +106,26 @@ class AdminOrderAdapter(
             else -> holder.status.setTextColor(Color.GRAY)
         }
 
-        // Hide buttons for finalized orders
-        if (order.status.lowercase() == "delivered" || order.status.lowercase() == "cancelled") {
+        // Admin Action Buttons
+        if (order.paymentStatus == "pending_verification") {
+            holder.btnVerifyPayment.visibility = View.VISIBLE
+            holder.btnRejectPayment.visibility = View.VISIBLE
             holder.btnUpdateStatus.visibility = View.GONE
-            holder.btnHandleCancellation.visibility = View.GONE
         } else {
-            holder.btnUpdateStatus.visibility = View.VISIBLE
-            holder.btnUpdateStatus.text = "Update Status"
-            holder.btnUpdateStatus.setBackgroundColor(Color.parseColor("#4CAF50"))
-            holder.btnHandleCancellation.visibility = View.GONE
+            holder.btnVerifyPayment.visibility = View.GONE
+            holder.btnRejectPayment.visibility = View.GONE
+            
+            // Show update status only for active/verified orders
+            if (order.status == "delivered" || order.status == "cancelled" || order.paymentStatus == "rejected") {
+                holder.btnUpdateStatus.visibility = View.GONE
+            } else {
+                holder.btnUpdateStatus.visibility = View.VISIBLE
+            }
         }
 
-        holder.btnUpdateStatus.setOnClickListener {
-            onUpdateStatus(order)
-        }
-
-        holder.btnHandleCancellation.setOnClickListener {
-            onHandleCancellation(order)
-        }
+        holder.btnUpdateStatus.setOnClickListener { onUpdateStatus(order) }
+        holder.btnVerifyPayment.setOnClickListener { onVerifyPayment(order) }
+        holder.btnRejectPayment.setOnClickListener { onRejectPayment(order) }
     }
 
     override fun getItemCount() = orders.size

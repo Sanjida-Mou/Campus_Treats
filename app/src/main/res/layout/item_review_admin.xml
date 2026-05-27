@@ -86,7 +86,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:text="Not replied yet"
-            android:textColor="@color/text_hint"
+            android:textColor="@color/text_black"
             android:fontStyle="italic" />
 
         <LinearLayout
@@ -104,6 +104,8 @@
                 android:background="@drawable/edit_text_background"
                 android:hint="Type your reply..."
                 android:padding="10dp"
+                android:textColor="@color/text_black"
+                android:textColorHint="@color/text_hint"
                 android:textSize="12sp" />
 
             <Button

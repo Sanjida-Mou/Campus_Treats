@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardCornerRadius="28dp"
+    app:cardElevation="0dp"
+    app:cardBackgroundColor="@color/white">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:gravity="center_horizontal">
+
+        <View
+            android:layout_width="40dp"
+            android:layout_height="4dp"
+            android:background="#E0E0E0"
+            android:layout_marginBottom="24dp" />
+
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/dialogUserImage"
+            android:layout_width="110dp"
+            android:layout_height="110dp"
+            android:src="@drawable/ic_person"
+            app:civ_border_width="3dp"
+            app:civ_border_color="@color/primary_green"
+            android:layout_marginBottom="16dp"/>
+
+        <TextView
+            android:id="@+id/dialogUserName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Maria Maria"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_black"
+            android:layout_marginBottom="20dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="#F8F9FA"
+            android:padding="16dp"
+            android:layout_marginBottom="24dp">
+
+            <TextView
+                android:id="@+id/dialogUserDetails"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Details"
+                android:textSize="14sp"
+                android:textColor="#424242"
+                android:lineSpacingExtra="8dp"/>
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/dialogOkButton"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:text="CLOSE"
+            android:backgroundTint="@color/primary_green"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            android:letterSpacing="0.1" />
+
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

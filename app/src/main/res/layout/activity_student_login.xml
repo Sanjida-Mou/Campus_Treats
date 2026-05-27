@@ -18,6 +18,18 @@
             android:background="@color/primary_green"
             app:layout_constraintTop_toTopOf="parent" />
 
+        <ImageView
+            android:id="@+id/backToWelcomeBtn"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:padding="8dp"
+            android:src="@drawable/ic_home"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="@color/white" />
+
         <androidx.cardview.widget.CardView
             android:id="@+id/logoCard"
             android:layout_width="80dp"

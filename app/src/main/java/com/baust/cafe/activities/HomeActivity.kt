@@ -6,7 +6,6 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import com.baust.cafe.R
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
@@ -17,16 +16,17 @@ import com.baust.cafe.models.MenuItem
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
+import java.util.Locale
 
-class HomeActivity : AppCompatActivity() {
+class HomeActivity : BaseUserActivity() {
 
     private lateinit var userNameText: TextView
+    private lateinit var totalSpentText: TextView
     private lateinit var profileImage: ImageView
     private lateinit var auth: FirebaseAuth
-    private lateinit var cartIcon: View
     private lateinit var navHome: ImageView
+    private lateinit var navCart: ImageView
     private lateinit var navBookmark: ImageView
-    private lateinit var navHistory: ImageView
     private lateinit var navNotifications: ImageView
     private lateinit var navProfile: ImageView
     
@@ -42,11 +42,11 @@ class HomeActivity : AppCompatActivity() {
         
         // Initialize UI Elements
         userNameText = findViewById(R.id.userNameText)
+        totalSpentText = findViewById(R.id.totalSpentText)
         profileImage = findViewById(R.id.profileImage)
-        cartIcon = findViewById(R.id.cartIcon)
         navHome = findViewById(R.id.navHome)
+        navCart = findViewById(R.id.navCart)
         navBookmark = findViewById(R.id.navBookmark)
-        navHistory = findViewById(R.id.navHistory)
         navNotifications = findViewById(R.id.navNotifications)
         navProfile = findViewById(R.id.navProfile)
         menuRecyclerView = findViewById(R.id.menuRecyclerView)
@@ -55,14 +55,14 @@ class HomeActivity : AppCompatActivity() {
         setupNavigation()
         loadUserData()
         loadMenuData()
+        
+        setupBottomNavigation(R.id.navHome)
     }
 
     private fun setupMenuRecyclerView() {
-        // Change from Horizontal to Grid (2 columns) as requested
         menuRecyclerView.layoutManager = androidx.recyclerview.widget.GridLayoutManager(this, 2)
 
         popularFoodAdapter = PopularFoodAdapter(foodList) { menuItem ->
-            // INSTANT ORDER: Go directly to checkout
             val cartItem = com.baust.cafe.models.CartItem(
                 itemId = menuItem.itemId,
                 itemName = menuItem.name,
@@ -76,11 +76,6 @@ class HomeActivity : AppCompatActivity() {
             startActivity(intent)
         }
         menuRecyclerView.adapter = popularFoodAdapter
-    }
-
-    private fun addToCart(menuItem: MenuItem) {
-        // Logic to add to cart
-        Toast.makeText(this, "${menuItem.name} added to cart", Toast.LENGTH_SHORT).show()
     }
 
     private fun loadMenuData() {
@@ -104,14 +99,13 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun setupNavigation() {
-        // Top Cart Icon
-        cartIcon.setOnClickListener {
-            startActivity(Intent(this, CartActivity::class.java))
-        }
-
-        // Bottom Navigation
         navHome.setOnClickListener {
             // Already on Home
+        }
+
+        navCart.setOnClickListener {
+            startActivity(Intent(this, CartActivity::class.java))
+            finish()
         }
 
         navBookmark.setOnClickListener {
@@ -119,13 +113,9 @@ class HomeActivity : AppCompatActivity() {
             finish()
         }
 
-        navHistory.setOnClickListener {
-            startActivity(Intent(this, OrderHistoryActivity::class.java))
-            finish()
-        }
-
         navNotifications.setOnClickListener {
-            Toast.makeText(this, "No new notifications", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, UserNotificationsActivity::class.java))
+            finish()
         }
 
         navProfile.setOnClickListener {
@@ -143,20 +133,22 @@ class HomeActivity : AppCompatActivity() {
         val userId = user.uid
         val database = FirebaseDatabase.getInstance().getReference("Users").child(userId)
 
-        // Try to show name from Google profile immediately if available
         user.displayName?.let {
             userNameText.text = "$it - Campus Treats"
         }
 
-        database.addValueEventListener(object : com.google.firebase.database.ValueEventListener {
-            override fun onDataChange(snapshot: com.google.firebase.database.DataSnapshot) {
+        database.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
                 if (snapshot.exists()) {
                     val name = snapshot.child("name").value.toString()
                     val imageUrl = snapshot.child("profileImage").value.toString()
+                    val totalSpent = snapshot.child("totalSpent").getValue(Double::class.java) ?: 0.0
 
                     if (name.isNotEmpty() && name != "null") {
                         userNameText.text = "$name - Campus Treats"
                     }
+
+                    totalSpentText.text = String.format(Locale.getDefault(), "%.2f", totalSpent)
 
                     if (imageUrl.isNotEmpty() && imageUrl != "null") {
                         if (imageUrl.startsWith("http")) {
@@ -178,7 +170,7 @@ class HomeActivity : AppCompatActivity() {
                 }
             }
 
-            override fun onCancelled(error: com.google.firebase.database.DatabaseError) {
+            override fun onCancelled(error: DatabaseError) {
             }
         })
     }
