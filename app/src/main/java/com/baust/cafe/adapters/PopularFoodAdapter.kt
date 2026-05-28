@@ -1,5 +1,7 @@
 package com.baust.cafe.adapters
 
+import android.graphics.BitmapFactory
+import android.util.Base64
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -36,16 +38,26 @@ class PopularFoodAdapter(
         holder.foodSubtitle.text = food.description
         holder.foodPrice.text = String.format(Locale.getDefault(), "Tk. %.2f", food.price)
 
+        // Support for both URL and Base64
         if (food.imageUrl.isNotEmpty()) {
-            Glide.with(holder.itemView.context)
-                .load(food.imageUrl)
-                .placeholder(R.drawable.cafe_logo)
-                .into(holder.foodImage)
+            if (food.imageUrl.startsWith("http")) {
+                Glide.with(holder.itemView.context)
+                    .load(food.imageUrl)
+                    .placeholder(R.drawable.cafe_logo)
+                    .into(holder.foodImage)
+            } else {
+                try {
+                    val imageBytes = Base64.decode(food.imageUrl, Base64.DEFAULT)
+                    val decodedImage = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+                    holder.foodImage.setImageBitmap(decodedImage)
+                } catch (e: Exception) {
+                    holder.foodImage.setImageResource(R.drawable.cafe_logo)
+                }
+            }
         } else {
             holder.foodImage.setImageResource(R.drawable.cafe_logo)
         }
 
-        // Handle Availability
         if (food.available) {
             holder.plusButton.isEnabled = true
             holder.plusButton.alpha = 1.0f
@@ -56,7 +68,6 @@ class PopularFoodAdapter(
 
         holder.plusButton.setOnClickListener { onAddClicked(food) }
         
-        // Add click listener to the entire item to open details
         holder.itemView.setOnClickListener {
             val intent = android.content.Intent(holder.itemView.context, com.baust.cafe.activities.FoodDetailActivity::class.java).apply {
                 putExtra("FOOD_ID", food.itemId)

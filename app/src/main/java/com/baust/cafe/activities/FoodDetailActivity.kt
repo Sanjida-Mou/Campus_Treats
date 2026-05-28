@@ -17,6 +17,8 @@ import com.google.firebase.database.*
 import java.util.Locale
 
 import android.content.Intent
+import android.graphics.BitmapFactory
+import android.util.Base64
 import com.baust.cafe.models.CartItem
 
 class FoodDetailActivity : AppCompatActivity() {
@@ -105,8 +107,19 @@ class FoodDetailActivity : AppCompatActivity() {
             Toast.makeText(this, "This item is currently out of stock", Toast.LENGTH_LONG).show()
         }
 
+        // Load image (Supports both URL and Base64)
         if (imageUrl.isNotEmpty()) {
-            Glide.with(this).load(imageUrl).placeholder(R.drawable.cafe_logo).into(foodImage)
+            if (imageUrl.startsWith("http")) {
+                Glide.with(this).load(imageUrl).placeholder(R.drawable.cafe_logo).into(foodImage)
+            } else {
+                try {
+                    val imageBytes = Base64.decode(imageUrl, Base64.DEFAULT)
+                    val decodedImage = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+                    foodImage.setImageBitmap(decodedImage)
+                } catch (e: Exception) {
+                    foodImage.setImageResource(R.drawable.cafe_logo)
+                }
+            }
         }
 
         // Click Listeners
@@ -300,8 +313,8 @@ class FoodDetailActivity : AppCompatActivity() {
                             Glide.with(this).load(imageUrl).placeholder(R.drawable.ic_person).into(userImage)
                         } else {
                             try {
-                                val imageBytes = android.util.Base64.decode(imageUrl, android.util.Base64.DEFAULT)
-                                val bitmap = android.graphics.BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+                                val imageBytes = Base64.decode(imageUrl, Base64.DEFAULT)
+                                val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
                                 userImage.setImageBitmap(bitmap)
                             } catch (e: Exception) {
                                 userImage.setImageResource(R.drawable.ic_person)

@@ -76,24 +76,25 @@ class ManageMenuActivity : BaseAdminActivity() {
                 val status = if (isAvailable) "Available" else "Out of Stock"
                 Toast.makeText(this, "${item.name} is now $status", Toast.LENGTH_SHORT).show()
                 
-                // BROADCAST NOTIFICATION TO ALL USERS
+                // BROADCAST NOTIFICATION TO ALL USERS WITH EXACT REQUESTED WORDING
                 broadcastStockUpdate(item.name, isAvailable)
             }
     }
 
     private fun broadcastStockUpdate(itemName: String, isAvailable: Boolean) {
         val usersDb = FirebaseDatabase.getInstance().getReference("Users")
-        val statusText = if (isAvailable) "is now AVAILABLE!" else "is currently OUT OF STOCK"
-        val message = "$itemName $statusText"
+        // Exact wording: "That item is out of stock right now..." or "the item is available now.."
+        val message = if (isAvailable) "$itemName is available now.." else "$itemName is out of stock right now..."
         
         usersDb.get().addOnSuccessListener { snapshot ->
             for (userSnapshot in snapshot.children) {
                 val userId = userSnapshot.key ?: continue
+                
                 val notifyDb = FirebaseDatabase.getInstance().getReference("UserNotifications").child(userId)
                 val id = notifyDb.push().key ?: continue
                 val notification = UserNotification(
                     id = id,
-                    title = "Food Availability Update",
+                    title = "Menu Update",
                     message = message,
                     type = "stock",
                     timestamp = System.currentTimeMillis(),
@@ -101,6 +102,8 @@ class ManageMenuActivity : BaseAdminActivity() {
                 )
                 notifyDb.child(id).setValue(notification)
             }
+        }.addOnFailureListener {
+            android.util.Log.e("ManageMenu", "Failed to broadcast: ${it.message}")
         }
     }
 }

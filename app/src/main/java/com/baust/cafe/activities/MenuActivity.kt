@@ -98,9 +98,6 @@ class MenuActivity : BaseUserActivity() {
             finish()
         }
 
-        findViewById<android.widget.ImageView>(R.id.backBtn).setOnClickListener {
-            finish()
-        }
     }
 
     private fun fetchMenuData() {

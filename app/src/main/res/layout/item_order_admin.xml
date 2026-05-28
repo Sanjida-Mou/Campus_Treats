@@ -75,7 +75,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:text="Payment: bKash"
+            android:text="Payment: Bkash"
             android:textColor="@color/primary_green"
             android:textStyle="bold" />
 
@@ -121,7 +121,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="40dp"
                 android:layout_marginStart="8dp"
-                android:text="Verify Payment"
+                android:text="Okay"
                 android:textSize="10sp"
                 android:textAllCaps="false"
                 android:backgroundTint="@color/primary_green"
@@ -132,10 +132,32 @@
                 android:layout_width="wrap_content"
                 android:layout_height="40dp"
                 android:layout_marginStart="8dp"
-                android:text="Reject"
+                android:text="Cancel"
                 android:textSize="10sp"
                 android:textAllCaps="false"
                 android:backgroundTint="@color/error_red"
+                android:visibility="gone"/>
+
+            <Button
+                android:id="@+id/btnReturnPayment"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_marginStart="8dp"
+                android:text="Return Payment"
+                android:textSize="10sp"
+                android:textAllCaps="false"
+                android:backgroundTint="@color/card_blue"
+                android:visibility="gone"/>
+
+            <Button
+                android:id="@+id/btnDeleteOrder"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_marginStart="8dp"
+                android:text="Delete History"
+                android:textSize="10sp"
+                android:textAllCaps="false"
+                android:backgroundTint="@color/text_hint"
                 android:visibility="gone"/>
         </LinearLayout>
 

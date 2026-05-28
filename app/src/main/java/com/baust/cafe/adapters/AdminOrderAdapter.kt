@@ -19,6 +19,8 @@ class AdminOrderAdapter(
     private val onUpdateStatus: (Order) -> Unit,
     private val onVerifyPayment: (Order) -> Unit,
     private val onRejectPayment: (Order) -> Unit,
+    private val onReturnPayment: (Order) -> Unit,
+    private val onDeleteOrder: (Order) -> Unit,
     private val onUserClick: (String) -> Unit
 ) : RecyclerView.Adapter<AdminOrderAdapter.ViewHolder>() {
 
@@ -34,6 +36,8 @@ class AdminOrderAdapter(
         val btnUpdateStatus: Button = view.findViewById(R.id.btnUpdateStatus)
         val btnVerifyPayment: Button = view.findViewById(R.id.btnVerifyPayment)
         val btnRejectPayment: Button = view.findViewById(R.id.btnRejectPayment)
+        val btnReturnPayment: Button = view.findViewById(R.id.btnReturnPayment)
+        val btnDeleteOrder: Button = view.findViewById(R.id.btnDeleteOrder)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -111,6 +115,8 @@ class AdminOrderAdapter(
             holder.btnVerifyPayment.visibility = View.VISIBLE
             holder.btnRejectPayment.visibility = View.VISIBLE
             holder.btnUpdateStatus.visibility = View.GONE
+            holder.btnReturnPayment.visibility = View.GONE
+            holder.btnDeleteOrder.visibility = View.GONE
         } else {
             holder.btnVerifyPayment.visibility = View.GONE
             holder.btnRejectPayment.visibility = View.GONE
@@ -121,11 +127,39 @@ class AdminOrderAdapter(
             } else {
                 holder.btnUpdateStatus.visibility = View.VISIBLE
             }
+
+            // Return Payment Button logic
+            val isOnlinePayment = order.specialInstructions.contains("bKash", ignoreCase = true) || 
+                                 order.specialInstructions.contains("Nagad", ignoreCase = true)
+            
+            if (order.status == "cancelled" && isOnlinePayment && order.paymentStatus == "verified" && order.refundStatus != "completed") {
+                holder.btnReturnPayment.visibility = View.VISIBLE
+                if (order.refundStatus == "pending") {
+                    holder.btnReturnPayment.text = "Returning..."
+                    holder.btnReturnPayment.isEnabled = false
+                } else {
+                    holder.btnReturnPayment.text = "Return Payment"
+                    holder.btnReturnPayment.isEnabled = true
+                }
+            } else {
+                holder.btnReturnPayment.visibility = View.GONE
+            }
+
+            // Delete History Button for Delivered/Cancelled
+            if (order.status == "delivered" || order.status == "cancelled") {
+                // If it needs refund, wait for refund completion before allowing delete? 
+                // Let's just show it for delivered/cancelled
+                holder.btnDeleteOrder.visibility = View.VISIBLE
+            } else {
+                holder.btnDeleteOrder.visibility = View.GONE
+            }
         }
 
         holder.btnUpdateStatus.setOnClickListener { onUpdateStatus(order) }
         holder.btnVerifyPayment.setOnClickListener { onVerifyPayment(order) }
         holder.btnRejectPayment.setOnClickListener { onRejectPayment(order) }
+        holder.btnReturnPayment.setOnClickListener { onReturnPayment(order) }
+        holder.btnDeleteOrder.setOnClickListener { onDeleteOrder(order) }
     }
 
     override fun getItemCount() = orders.size

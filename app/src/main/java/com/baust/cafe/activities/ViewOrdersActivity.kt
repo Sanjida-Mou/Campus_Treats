@@ -40,6 +40,8 @@ class ViewOrdersActivity : BaseAdminActivity() {
             onUpdateStatus = { order -> showUpdateStatusDialog(order) },
             onVerifyPayment = { order -> verifyPayment(order) },
             onRejectPayment = { order -> rejectPayment(order) },
+            onReturnPayment = { order -> returnPayment(order) },
+            onDeleteOrder = { order -> confirmDeleteOrder(order) },
             onUserClick = { userId -> showUserDetailsDialog(userId) }
         )
         recyclerView.adapter = adapter
@@ -55,9 +57,7 @@ class ViewOrdersActivity : BaseAdminActivity() {
 
         database.child(order.orderId).updateChildren(updates).addOnSuccessListener {
             Toast.makeText(this, "Payment Verified!", Toast.LENGTH_SHORT).show()
-            
-            // NOTIFY USER
-            pushUserNotification(order.studentId, "Order Confirmed!", "Your payment has been verified and order is now confirmed.", "order_status")
+            pushUserNotification(order.studentId, "Payment Verified", "payment successfull", "order_status")
         }
     }
 
@@ -72,12 +72,40 @@ class ViewOrdersActivity : BaseAdminActivity() {
                 
                 database.child(order.orderId).updateChildren(updates).addOnSuccessListener {
                     Toast.makeText(this, "Order Rejected due to fake payment", Toast.LENGTH_SHORT).show()
-                    
-                    // NOTIFY USER
-                    pushUserNotification(order.studentId, "Order Rejected", "Your payment verification failed. Order has been cancelled.", "order_status")
+                    pushUserNotification(order.studentId, "Payment Rejected", "payment failed", "order_status")
                 }
             }
             .setNegativeButton("No", null)
+            .show()
+    }
+
+    private fun returnPayment(order: Order) {
+        AlertDialog.Builder(this)
+            .setTitle("Return Payment")
+            .setMessage("Have you returned the money to the customer via bKash/Nagad?")
+            .setPositiveButton("Yes, Money Returned") { _, _ ->
+                val updates = HashMap<String, Any>()
+                updates["refundStatus"] = "completed"
+                
+                database.child(order.orderId).updateChildren(updates).addOnSuccessListener {
+                    Toast.makeText(this, "Refund marked as completed", Toast.LENGTH_SHORT).show()
+                    pushUserNotification(order.studentId, "Refund Processed", "Your payment has been returned successfully", "order_status")
+                }
+            }
+            .setNegativeButton("No", null)
+            .show()
+    }
+
+    private fun confirmDeleteOrder(order: Order) {
+        AlertDialog.Builder(this)
+            .setTitle("Delete Order History")
+            .setMessage("Are you sure you want to delete this order from the system permanently?")
+            .setPositiveButton("Delete") { _, _ ->
+                database.child(order.orderId).removeValue().addOnSuccessListener {
+                    Toast.makeText(this, "Order deleted from history", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Cancel", null)
             .show()
     }
 
@@ -139,21 +167,23 @@ class ViewOrdersActivity : BaseAdminActivity() {
             .setSingleChoiceItems(statuses, currentStatusIndex) { dialog, which ->
                 val newStatus = statuses[which]
                 database.child(order.orderId).child("status").setValue(newStatus).addOnSuccessListener {
-                    // NOTIFY USER
                     when (newStatus) {
-                        "delivered" -> pushUserNotification(order.studentId, "Order Delivered!", "Our order is delivered from BAUST Cafe. Enjoy!", "order_status")
+                        "delivered" -> pushUserNotification(order.studentId, "Order Update", "Our order is delivered from BAUST Cafe", "order_status")
                         "ready" -> pushUserNotification(order.studentId, "Order Ready!", "Your food is ready for pickup!", "order_status")
                         "preparing" -> pushUserNotification(order.studentId, "Order Preparing", "Your food is being prepared in the kitchen.", "order_status")
+                        "cancelled" -> {
+                            val isOnlinePayment = order.specialInstructions.contains("bKash", ignoreCase = true) || 
+                                                 order.specialInstructions.contains("Nagad", ignoreCase = true)
+                            if (isOnlinePayment && order.paymentStatus == "verified") {
+                                pushUserNotification(order.studentId, "Order Cancelled", "Your order was cancelled. Admin will return your payment soon.", "order_status")
+                            }
+                        }
                     }
                 }
                 dialog.dismiss()
             }
             .setNegativeButton("Cancel", null)
             .show()
-    }
-
-    private fun showHandleCancellationDialog(order: Order) {
-        // No longer used, but kept for callback compatibility
     }
 
     private fun fetchOrders() {

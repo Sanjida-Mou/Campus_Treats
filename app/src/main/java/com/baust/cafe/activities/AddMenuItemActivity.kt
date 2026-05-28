@@ -3,10 +3,11 @@ package com.baust.cafe.activities
 import android.app.Activity
 import android.app.ProgressDialog
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
-import android.provider.MediaStore
-import android.util.Log
+import android.util.Base64
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
@@ -16,11 +17,9 @@ import com.baust.cafe.R
 import com.baust.cafe.models.MenuItem
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.bumptech.glide.Glide
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.storage.FirebaseStorage
-import com.google.firebase.storage.StorageException
 import java.util.UUID
+import java.io.ByteArrayOutputStream
 
 class AddMenuItemActivity : AppCompatActivity() {
 
@@ -28,7 +27,6 @@ class AddMenuItemActivity : AppCompatActivity() {
     private lateinit var itemDescription: EditText
     private lateinit var itemPrice: EditText
     private lateinit var itemCategory: EditText
-    private lateinit var itemImageUrlField: EditText
     private lateinit var addFoodButton: Button
     private lateinit var addItemImage: ImageView
     private lateinit var selectImageFab: FloatingActionButton
@@ -45,7 +43,6 @@ class AddMenuItemActivity : AppCompatActivity() {
         itemDescription = findViewById(R.id.itemDescription)
         itemPrice = findViewById(R.id.itemPrice)
         itemCategory = findViewById(R.id.itemCategory)
-        itemImageUrlField = findViewById(R.id.itemImageUrl)
         addFoodButton = findViewById(R.id.addFoodButton)
         addItemImage = findViewById(R.id.addItemImage)
         selectImageFab = findViewById(R.id.selectImageFab)
@@ -73,8 +70,6 @@ class AddMenuItemActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == PICK_IMAGE_REQUEST && resultCode == Activity.RESULT_OK && data != null && data.data != null) {
             selectedImageUri = data.data
-            // Clear URL field if image is selected
-            itemImageUrlField.setText("")
             Glide.with(this).load(selectedImageUri).into(addItemImage)
         }
     }
@@ -84,53 +79,59 @@ class AddMenuItemActivity : AppCompatActivity() {
         val desc = itemDescription.text.toString().trim()
         val priceStr = itemPrice.text.toString().trim()
         val category = itemCategory.text.toString().trim()
-        val directUrl = itemImageUrlField.text.toString().trim()
 
         if (name.isEmpty() || priceStr.isEmpty()) {
             Toast.makeText(this, "Please fill name and price", Toast.LENGTH_SHORT).show()
             return
         }
 
-        val price = try { priceStr.toDouble() } catch (e: Exception) { 0.0 }
-        val itemId = UUID.randomUUID().toString()
-
-        // IMPORTANT: If a URL is provided, we skip Storage entirely!
-        if (directUrl.isNotEmpty()) {
-            progressDialog.show()
-            addFoodButton.isEnabled = false
-            saveToDatabase(itemId, name, desc, price, category, directUrl)
+        if (selectedImageUri == null) {
+            Toast.makeText(this, "Please select an image from gallery", Toast.LENGTH_SHORT).show()
             return
         }
 
-        // If no URL, but an image was selected from gallery
-        if (selectedImageUri != null) {
-            progressDialog.show()
-            addFoodButton.isEnabled = false
-            performUpload(itemId, name, desc, price, category)
-        } else {
-            Toast.makeText(this, "Please paste a URL or select an image", Toast.LENGTH_SHORT).show()
+        progressDialog.show()
+        val price = try { priceStr.toDouble() } catch (e: Exception) { 0.0 }
+        val itemId = UUID.randomUUID().toString()
+
+        // CONVERT IMAGE TO BASE64 (Exactly like Profile Logic)
+        try {
+            val inputStream = contentResolver.openInputStream(selectedImageUri!!)
+            val bitmap = BitmapFactory.decodeStream(inputStream)
+            
+            if (bitmap == null) {
+                progressDialog.dismiss()
+                Toast.makeText(this, "Could not load image", Toast.LENGTH_SHORT).show()
+                return
+            }
+
+            // Scale down to save space
+            val scaledBitmap = scaleBitmap(bitmap, 600)
+            
+            val outputStream = ByteArrayOutputStream()
+            scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 40, outputStream)
+            val byteArray = outputStream.toByteArray()
+            val base64Image = Base64.encodeToString(byteArray, Base64.NO_WRAP)
+            
+            saveToDatabase(itemId, name, desc, price, category, base64Image)
+        } catch (e: Exception) {
+            progressDialog.dismiss()
+            Toast.makeText(this, "Error processing image: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
 
-    private fun performUpload(itemId: String, name: String, desc: String, price: Double, category: String) {
-        val storageRef = FirebaseStorage.getInstance().getReference("MenuImages").child("$itemId.jpg")
-        
-        storageRef.putFile(selectedImageUri!!)
-            .addOnSuccessListener { taskSnapshot ->
-                taskSnapshot.storage.downloadUrl.addOnSuccessListener { uri ->
-                    saveToDatabase(itemId, name, desc, price, category, uri.toString())
-                }
-            }
-            .addOnFailureListener { e ->
-                progressDialog.dismiss()
-                addFoodButton.isEnabled = true
-                val msg = if (e is StorageException && e.errorCode == StorageException.ERROR_NOT_AUTHORIZED) {
-                    "Permission Denied. Use the 'Paste URL' method instead."
-                } else {
-                    e.localizedMessage
-                }
-                Toast.makeText(this, "Upload failed: $msg", Toast.LENGTH_LONG).show()
-            }
+    private fun scaleBitmap(bitmap: Bitmap, maxSize: Int): Bitmap {
+        var width = bitmap.width
+        var height = bitmap.height
+        val bitmapRatio = width.toFloat() / height.toFloat()
+        if (bitmapRatio > 1) {
+            width = maxSize
+            height = (width / bitmapRatio).toInt()
+        } else {
+            height = maxSize
+            width = (height * bitmapRatio).toInt()
+        }
+        return Bitmap.createScaledBitmap(bitmap, width, height, true)
     }
 
     private fun saveToDatabase(itemId: String, name: String, desc: String, price: Double, category: String, imageUrl: String) {
@@ -153,7 +154,6 @@ class AddMenuItemActivity : AppCompatActivity() {
             }
             .addOnFailureListener { e ->
                 progressDialog.dismiss()
-                addFoodButton.isEnabled = true
                 Toast.makeText(this, "Database error: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }

@@ -3,9 +3,11 @@ package com.baust.cafe.activities
 import android.app.Activity
 import android.app.ProgressDialog
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
-import android.provider.MediaStore
+import android.util.Base64
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
@@ -15,7 +17,7 @@ import com.baust.cafe.R
 import com.baust.cafe.models.MenuItem
 import com.bumptech.glide.Glide
 import com.google.firebase.database.FirebaseDatabase
-import java.util.UUID
+import java.io.ByteArrayOutputStream
 
 class EditMenuItemActivity : AppCompatActivity() {
 
@@ -23,7 +25,6 @@ class EditMenuItemActivity : AppCompatActivity() {
     private lateinit var itemDescription: EditText
     private lateinit var itemPrice: EditText
     private lateinit var itemCategory: EditText
-    private lateinit var itemImageUrlField: EditText
     private lateinit var updateFoodButton: Button
     private lateinit var editItemImage: ImageView
     private lateinit var progressDialog: ProgressDialog
@@ -42,7 +43,6 @@ class EditMenuItemActivity : AppCompatActivity() {
         itemDescription = findViewById(R.id.itemDescription)
         itemPrice = findViewById(R.id.itemPrice)
         itemCategory = findViewById(R.id.itemCategory)
-        itemImageUrlField = findViewById(R.id.itemImageUrl)
         updateFoodButton = findViewById(R.id.addFoodButton)
         editItemImage = findViewById(R.id.addItemImage)
 
@@ -60,10 +60,19 @@ class EditMenuItemActivity : AppCompatActivity() {
         itemCategory.setText(intent.getStringExtra("ITEM_CAT"))
         currentImageUrl = intent.getStringExtra("ITEM_IMAGE") ?: ""
         isAvailable = intent.getBooleanExtra("ITEM_AVAILABLE", true)
-        itemImageUrlField.setText(currentImageUrl)
 
         if (currentImageUrl.isNotEmpty()) {
-            Glide.with(this).load(currentImageUrl).placeholder(R.drawable.cafe_logo).into(editItemImage)
+            if (currentImageUrl.startsWith("http")) {
+                Glide.with(this).load(currentImageUrl).placeholder(R.drawable.cafe_logo).into(editItemImage)
+            } else {
+                try {
+                    val imageBytes = Base64.decode(currentImageUrl, Base64.DEFAULT)
+                    val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+                    editItemImage.setImageBitmap(bitmap)
+                } catch (e: Exception) {
+                    editItemImage.setImageResource(R.drawable.ic_person)
+                }
+            }
         }
 
         findViewById<com.google.android.material.floatingactionbutton.FloatingActionButton>(R.id.selectImageFab).setOnClickListener {
@@ -81,7 +90,6 @@ class EditMenuItemActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == PICK_IMAGE_REQUEST && resultCode == Activity.RESULT_OK && data != null && data.data != null) {
             selectedImageUri = data.data
-            itemImageUrlField.setText("") // Clear URL if local image picked
             Glide.with(this).load(selectedImageUri).into(editItemImage)
         }
     }
@@ -91,18 +99,54 @@ class EditMenuItemActivity : AppCompatActivity() {
         val desc = itemDescription.text.toString().trim()
         val priceStr = itemPrice.text.toString().trim()
         val category = itemCategory.text.toString().trim()
-        val directUrl = itemImageUrlField.text.toString().trim()
 
         if (name.isEmpty() || priceStr.isEmpty()) {
             Toast.makeText(this, "Please fill name and price", Toast.LENGTH_SHORT).show()
             return
         }
 
-        val price = priceStr.toDouble()
-        val imageUrl = if (directUrl.isNotEmpty()) directUrl else currentImageUrl
-
         progressDialog.show()
+        val price = try { priceStr.toDouble() } catch (e: Exception) { 0.0 }
 
+        if (selectedImageUri != null) {
+            // New image selected, convert to Base64
+            try {
+                val inputStream = contentResolver.openInputStream(selectedImageUri!!)
+                val originalBitmap = BitmapFactory.decodeStream(inputStream)
+                
+                // Resize image to max 800px to save space
+                val scaledBitmap = scaleBitmap(originalBitmap, 800)
+                
+                val outputStream = ByteArrayOutputStream()
+                scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 50, outputStream)
+                val byteArray = outputStream.toByteArray()
+                val base64Image = Base64.encodeToString(byteArray, Base64.DEFAULT)
+                saveToDatabase(name, desc, price, category, base64Image)
+            } catch (e: Exception) {
+                progressDialog.dismiss()
+                Toast.makeText(this, "Error processing image: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            // Keep old image
+            saveToDatabase(name, desc, price, category, currentImageUrl)
+        }
+    }
+
+    private fun scaleBitmap(bitmap: Bitmap, maxSize: Int): Bitmap {
+        var width = bitmap.width
+        var height = bitmap.height
+        val bitmapRatio = width.toFloat() / height.toFloat()
+        if (bitmapRatio > 1) {
+            width = maxSize
+            height = (width / bitmapRatio).toInt()
+        } else {
+            height = maxSize
+            width = (height * bitmapRatio).toInt()
+        }
+        return Bitmap.createScaledBitmap(bitmap, width, height, true)
+    }
+
+    private fun saveToDatabase(name: String, desc: String, price: Double, category: String, imageUrl: String) {
         val updatedItem = MenuItem(
             itemId = itemId,
             name = name,

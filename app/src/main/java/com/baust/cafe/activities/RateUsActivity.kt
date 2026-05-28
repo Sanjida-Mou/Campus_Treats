@@ -11,7 +11,6 @@ import com.baust.cafe.adapters.UserReviewAdapter
 import com.baust.cafe.models.Review
 import com.baust.cafe.models.User
 import com.baust.cafe.models.AdminNotification
-import com.baust.cafe.models.UserNotification
 import com.bumptech.glide.Glide
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
@@ -22,7 +21,6 @@ class RateUsActivity : BaseUserActivity() {
     private lateinit var ratingBar: RatingBar
     private lateinit var commentEdit: EditText
     private lateinit var submitBtn: Button
-    private lateinit var backBtn: ImageView
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: UserReviewAdapter
     private val reviewsList = mutableListOf<Review>()
@@ -39,13 +37,10 @@ class RateUsActivity : BaseUserActivity() {
         ratingBar = findViewById(R.id.rateUsRatingBar)
         commentEdit = findViewById(R.id.rateUsComment)
         submitBtn = findViewById(R.id.submitRateUsBtn)
-        backBtn = findViewById(R.id.backButton)
         recyclerView = findViewById(R.id.rateUsRecyclerView)
 
         setupRecyclerView()
         fetchReviews()
-
-        backBtn.setOnClickListener { finish() }
 
         submitBtn.setOnClickListener {
             submitReview()

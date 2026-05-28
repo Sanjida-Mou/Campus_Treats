@@ -14,7 +14,8 @@ data class Order(
     val status: String = "pending", // pending, preparing, ready, delivered, cancelled
     val specialInstructions: String = "",
     val transactionId: String = "",
-    val paymentStatus: String = "verified" // verified, pending_verification, rejected
+    val paymentStatus: String = "verified", // verified, pending_verification, rejected
+    val refundStatus: String = "none" // none, pending, completed
 )
 
 // This is a separate data class in the same file

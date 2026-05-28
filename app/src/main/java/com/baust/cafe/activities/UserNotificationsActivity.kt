@@ -42,14 +42,20 @@ class UserNotificationsActivity : BaseUserActivity() {
         database.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 notificationList.clear()
-                for (notifySnapshot in snapshot.children) {
-                    val notify = notifySnapshot.getValue(UserNotification::class.java)
-                    notify?.let { notificationList.add(it) }
+                if (snapshot.exists()) {
+                    for (notifySnapshot in snapshot.children) {
+                        val notify = notifySnapshot.getValue(UserNotification::class.java)
+                        notify?.let { notificationList.add(it) }
+                    }
+                } else {
+                    android.widget.Toast.makeText(this@UserNotificationsActivity, "No notifications found", android.widget.Toast.LENGTH_SHORT).show()
                 }
                 notificationList.sortByDescending { it.timestamp }
                 adapter.updateList(notificationList)
             }
-            override fun onCancelled(error: DatabaseError) {}
+            override fun onCancelled(error: DatabaseError) {
+                android.widget.Toast.makeText(this@UserNotificationsActivity, "Error: ${error.message}", android.widget.Toast.LENGTH_LONG).show()
+            }
         })
     }
 

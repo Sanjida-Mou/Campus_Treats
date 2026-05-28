@@ -2,10 +2,12 @@ package com.baust.cafe.activities
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import com.baust.cafe.R
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
@@ -16,12 +18,10 @@ import com.baust.cafe.models.MenuItem
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
-import java.util.Locale
 
 class HomeActivity : BaseUserActivity() {
 
     private lateinit var userNameText: TextView
-    private lateinit var totalSpentText: TextView
     private lateinit var profileImage: ImageView
     private lateinit var auth: FirebaseAuth
     private lateinit var navHome: ImageView
@@ -33,6 +33,7 @@ class HomeActivity : BaseUserActivity() {
     private lateinit var menuRecyclerView: RecyclerView
     private lateinit var popularFoodAdapter: PopularFoodAdapter
     private val foodList = mutableListOf<MenuItem>()
+    private var currentProfileImageData: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,7 +43,6 @@ class HomeActivity : BaseUserActivity() {
         
         // Initialize UI Elements
         userNameText = findViewById(R.id.userNameText)
-        totalSpentText = findViewById(R.id.totalSpentText)
         profileImage = findViewById(R.id.profileImage)
         navHome = findViewById(R.id.navHome)
         navCart = findViewById(R.id.navCart)
@@ -57,6 +57,54 @@ class HomeActivity : BaseUserActivity() {
         loadMenuData()
         
         setupBottomNavigation(R.id.navHome)
+
+        // Profile Photo Click -> Edit Profile
+        profileImage.setOnClickListener {
+            startActivity(Intent(this, EditProfileActivity::class.java))
+        }
+
+        // Profile Photo Long Click -> See Big Picture
+        profileImage.setOnLongClickListener {
+            showBigPicture()
+            true
+        }
+    }
+
+    private fun showBigPicture() {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_user_details, null)
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .create()
+
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+
+        val bigImage = dialogView.findViewById<ImageView>(R.id.dialogUserImage)
+        val nameText = dialogView.findViewById<TextView>(R.id.dialogUserName)
+        val detailsText = dialogView.findViewById<TextView>(R.id.dialogUserDetails)
+        val okBtn = dialogView.findViewById<android.widget.Button>(R.id.dialogOkButton)
+
+        nameText.text = "Profile Picture"
+        detailsText.visibility = View.GONE
+        
+        // Load the image into the big view
+        if (currentProfileImageData != null) {
+            if (currentProfileImageData!!.startsWith("http")) {
+                com.bumptech.glide.Glide.with(this).load(currentProfileImageData).into(bigImage)
+            } else {
+                try {
+                    val imageBytes = android.util.Base64.decode(currentProfileImageData, android.util.Base64.DEFAULT)
+                    val bitmap = android.graphics.BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+                    bigImage.setImageBitmap(bitmap)
+                } catch (e: Exception) {
+                    bigImage.setImageResource(R.drawable.cafe_logo)
+                }
+            }
+        } else {
+            bigImage.setImageResource(R.drawable.cafe_logo)
+        }
+
+        okBtn.setOnClickListener { dialog.dismiss() }
+        dialog.show()
     }
 
     private fun setupMenuRecyclerView() {
@@ -137,18 +185,16 @@ class HomeActivity : BaseUserActivity() {
             userNameText.text = "$it - Campus Treats"
         }
 
-        database.addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
+        database.addValueEventListener(object : com.google.firebase.database.ValueEventListener {
+            override fun onDataChange(snapshot: com.google.firebase.database.DataSnapshot) {
                 if (snapshot.exists()) {
                     val name = snapshot.child("name").value.toString()
                     val imageUrl = snapshot.child("profileImage").value.toString()
-                    val totalSpent = snapshot.child("totalSpent").getValue(Double::class.java) ?: 0.0
+                    currentProfileImageData = imageUrl
 
                     if (name.isNotEmpty() && name != "null") {
                         userNameText.text = "$name - Campus Treats"
                     }
-
-                    totalSpentText.text = String.format(Locale.getDefault(), "%.2f", totalSpent)
 
                     if (imageUrl.isNotEmpty() && imageUrl != "null") {
                         if (imageUrl.startsWith("http")) {
@@ -157,7 +203,6 @@ class HomeActivity : BaseUserActivity() {
                                 .placeholder(R.drawable.cafe_logo)
                                 .into(profileImage)
                         } else {
-                            // Load personal photo (Base64)
                             try {
                                 val imageBytes = android.util.Base64.decode(imageUrl, android.util.Base64.DEFAULT)
                                 val decodedImage = android.graphics.BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
@@ -170,7 +215,7 @@ class HomeActivity : BaseUserActivity() {
                 }
             }
 
-            override fun onCancelled(error: DatabaseError) {
+            override fun onCancelled(error: com.google.firebase.database.DatabaseError) {
             }
         })
     }

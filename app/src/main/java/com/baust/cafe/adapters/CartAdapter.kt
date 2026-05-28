@@ -1,5 +1,7 @@
 package com.baust.cafe.adapters
 
+import android.graphics.BitmapFactory
+import android.util.Base64
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -37,12 +39,22 @@ class CartAdapter(
         holder.priceText.text = String.format(Locale.getDefault(), "Tk. %.2f", item.price)
         holder.quantityText.text = item.quantity.toString()
 
-        // Load image using Glide
+        // Support for both URL and Base64
         if (item.imageUrl.isNotEmpty()) {
-            Glide.with(holder.itemView.context)
-                .load(item.imageUrl)
-                .placeholder(R.drawable.cafe_logo)
-                .into(holder.itemImage)
+            if (item.imageUrl.startsWith("http")) {
+                Glide.with(holder.itemView.context)
+                    .load(item.imageUrl)
+                    .placeholder(R.drawable.cafe_logo)
+                    .into(holder.itemImage)
+            } else {
+                try {
+                    val imageBytes = Base64.decode(item.imageUrl, Base64.DEFAULT)
+                    val decodedImage = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+                    holder.itemImage.setImageBitmap(decodedImage)
+                } catch (e: Exception) {
+                    holder.itemImage.setImageResource(R.drawable.cafe_logo)
+                }
+            }
         } else {
             holder.itemImage.setImageResource(R.drawable.cafe_logo)
         }

@@ -37,15 +37,24 @@ class AdminLoginActivity : AppCompatActivity() {
 
             // EQUALS IGNORE CASE: This makes it easier to log in if your phone 
             // capitalizes the first letter of the email automatically.
+            // 1. Local Check (Matches what you want to type in the phone)
             if (email.equals("sm.mou0137@gmail.com", ignoreCase = true) && password == "0123") {
                 
-                Toast.makeText(this, "Admin Login Successful", Toast.LENGTH_SHORT).show()
-                startActivity(Intent(this, AdminDashboardActivity::class.java))
-                
-                // Try Firebase login in background for features that need it
-                auth.signInWithEmailAndPassword(email, "0123")
-
-                finish()
+                // 2. Firebase Check (Must be at least 6 characters)
+                // ENSURE you set the password to '012345' in Firebase Console -> Auth
+                auth.signInWithEmailAndPassword(email, "012345")
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            Toast.makeText(this, "Admin Login Successful", Toast.LENGTH_SHORT).show()
+                            startActivity(Intent(this, AdminDashboardActivity::class.java))
+                            finish()
+                        } else {
+                            // If Firebase Auth fails, we still let you in (Dashboard will use 'Rescue Rules')
+                            Toast.makeText(this, "Firebase Auth failed: ${task.exception?.message}. Logging in via local mode.", Toast.LENGTH_LONG).show()
+                            startActivity(Intent(this, AdminDashboardActivity::class.java))
+                            finish()
+                        }
+                    }
             } else {
                 Toast.makeText(this, "Invalid Admin Credentials", Toast.LENGTH_SHORT).show()
             }

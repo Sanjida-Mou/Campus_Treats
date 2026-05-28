@@ -14,18 +14,6 @@
         android:background="@drawable/green_curve_background"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Top Bar -->
-    <ImageView
-        android:id="@+id/menuIcon"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
-        android:layout_marginStart="24dp"
-        android:layout_marginTop="24dp"
-        android:src="@drawable/ic_menu"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:tint="@color/white" />
-
     <LinearLayout
         android:id="@+id/topRightLayout"
         android:layout_width="wrap_content"
@@ -37,40 +25,13 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <LinearLayout
-            android:id="@+id/totalSpentLayout"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/cart_badge_bg"
-            android:gravity="center_vertical"
-            android:paddingHorizontal="12dp"
-            android:paddingVertical="8dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="৳"
-                android:textColor="@color/primary_green"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/totalSpentText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
-                android:text="0.00"
-                android:textColor="@color/primary_green"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
         <de.hdodenhof.circleimageview.CircleImageView
             android:id="@+id/profileImage"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_marginStart="12dp"
-            android:src="@drawable/cafe_logo" />
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:src="@drawable/cafe_logo"
+            app:civ_border_color="@color/white"
+            app:civ_border_width="2dp" />
     </LinearLayout>
 
     <!-- Welcome Message -->
@@ -79,12 +40,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="90dp"
         android:text="Good Morning,"
         android:textColor="@color/white"
         android:textSize="16sp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/menuIcon" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/userNameText"
