@@ -114,7 +114,7 @@
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
                     android:textColor="@color/text_black"
-                    android:textColorHint="@color/text_grey" />
+                    android:textColorHint="@color/text_hint" />
 
                 <!-- Student ID -->
                 <TextView
@@ -137,7 +137,7 @@
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
                     android:textColor="@color/text_black"
-                    android:textColorHint="@color/text_grey" />
+                    android:textColorHint="@color/text_hint" />
 
                 <!-- Email -->
                 <TextView
@@ -160,7 +160,7 @@
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
                     android:textColor="@color/text_black"
-                    android:textColorHint="@color/text_grey" />
+                    android:textColorHint="@color/text_hint" />
 
                 <!-- Phone -->
                 <TextView
@@ -183,7 +183,7 @@
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
                     android:textColor="@color/text_black"
-                    android:textColorHint="@color/text_grey" />
+                    android:textColorHint="@color/text_hint" />
 
                 <!-- Password -->
                 <TextView
@@ -206,7 +206,7 @@
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
                     android:textColor="@color/text_black"
-                    android:textColorHint="@color/text_grey" />
+                    android:textColorHint="@color/text_hint" />
 
                 <!-- Confirm Password -->
                 <TextView
@@ -229,7 +229,7 @@
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
                     android:textColor="@color/text_black"
-                    android:textColorHint="@color/text_grey" />
+                    android:textColorHint="@color/text_hint" />
 
                 <Button
                     android:id="@+id/registerButton"

@@ -32,7 +32,8 @@ class AdminDashboardActivity : BaseAdminActivity() {
 
         val manageMenuCard = findViewById<CardView>(R.id.manageMenuCard)
         val viewOrdersCard = findViewById<CardView>(R.id.viewOrdersCard)
-        val viewReviewsCard = findViewById<CardView>(R.id.viewReviewsCard)
+        val viewFoodReviewsCard = findViewById<CardView>(R.id.viewFoodReviewsCard)
+        val viewReportsCard = findViewById<CardView>(R.id.viewReportsCard)
         val adminLogoutCard = findViewById<CardView>(R.id.adminLogoutCard)
 
         manageMenuCard.setOnClickListener {
@@ -43,8 +44,16 @@ class AdminDashboardActivity : BaseAdminActivity() {
             startActivity(Intent(this, ViewOrdersActivity::class.java))
         }
 
-        viewReviewsCard.setOnClickListener {
-            startActivity(Intent(this, ViewReviewsActivity::class.java))
+        viewFoodReviewsCard.setOnClickListener {
+            val intent = Intent(this, ViewReviewsActivity::class.java)
+            intent.putExtra("VIEW_MODE", "FOOD")
+            startActivity(intent)
+        }
+
+        viewReportsCard.setOnClickListener {
+            val intent = Intent(this, ViewReviewsActivity::class.java)
+            intent.putExtra("VIEW_MODE", "REPORTS")
+            startActivity(intent)
         }
 
         adminLogoutCard.setOnClickListener {
@@ -99,9 +108,15 @@ class AdminDashboardActivity : BaseAdminActivity() {
                     val timestamp = snapshot.child("timestamp").getValue(Long::class.java) ?: 0
                     if (timestamp >= startTime) {
                         val reviewerName = snapshot.child("studentName").value.toString()
-                        val itemName = snapshot.child("itemName").value.toString()
-                        val foodOrGeneral = if (itemName.isEmpty() || itemName == "null") "Cafe" else itemName
-                        showNotification("New Review Received!", "@$reviewerName sent a review for $foodOrGeneral", ViewReviewsActivity::class.java)
+                        val itemId = snapshot.child("itemId").value.toString()
+                        
+                        if (itemId == "REPORT") {
+                            showNotification("New Report Received!", "@$reviewerName reported a problem", ViewReviewsActivity::class.java)
+                        } else {
+                            val itemName = snapshot.child("itemName").value.toString()
+                            val foodName = if (itemName.isEmpty() || itemName == "null") "Food" else itemName
+                            showNotification("New Review Received!", "@$reviewerName sent a review for $foodName", ViewReviewsActivity::class.java)
+                        }
                     }
                 }
                 override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {}

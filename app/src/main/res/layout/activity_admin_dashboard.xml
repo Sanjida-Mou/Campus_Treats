@@ -56,7 +56,7 @@
             <androidx.cardview.widget.CardView
                 android:id="@+id/manageMenuCard"
                 android:layout_width="0dp"
-                android:layout_height="170dp"
+                android:layout_height="160dp"
                 android:layout_rowWeight="1"
                 android:layout_columnWeight="1"
                 android:layout_margin="12dp"
@@ -99,7 +99,7 @@
             <androidx.cardview.widget.CardView
                 android:id="@+id/viewOrdersCard"
                 android:layout_width="0dp"
-                android:layout_height="170dp"
+                android:layout_height="160dp"
                 android:layout_rowWeight="1"
                 android:layout_columnWeight="1"
                 android:layout_margin="12dp"
@@ -139,11 +139,55 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- See Reviews -->
+            <!-- Food Reviews -->
             <androidx.cardview.widget.CardView
-                android:id="@+id/viewReviewsCard"
+                android:id="@+id/viewFoodReviewsCard"
                 android:layout_width="0dp"
-                android:layout_height="170dp"
+                android:layout_height="160dp"
+                android:layout_rowWeight="1"
+                android:layout_columnWeight="1"
+                android:layout_margin="12dp"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="8dp"
+                app:cardBackgroundColor="@color/white">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <View
+                        android:layout_width="64dp"
+                        android:layout_height="64dp"
+                        android:background="@drawable/cart_badge_bg"
+                        android:padding="16dp"
+                        android:backgroundTint="@color/accent_yellow"/>
+
+                    <ImageView
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_marginTop="-48dp"
+                        android:src="@android:drawable/btn_star_big_on"
+                        app:tint="@color/white" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="28dp"
+                        android:text="Food Reviews"
+                        android:textColor="@color/text_black"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Problem Reports -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/viewReportsCard"
+                android:layout_width="0dp"
+                android:layout_height="160dp"
                 android:layout_rowWeight="1"
                 android:layout_columnWeight="1"
                 android:layout_margin="12dp"
@@ -169,15 +213,14 @@
                         android:layout_width="32dp"
                         android:layout_height="32dp"
                         android:layout_marginTop="-48dp"
-                        android:src="@drawable/ic_plus"
-                        android:rotation="45"
-                        app:tint="#C2185B" />
+                        android:src="@android:drawable/ic_dialog_alert"
+                        app:tint="@color/white" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="28dp"
-                        android:text="See Reviews"
+                        android:text="Problem Reports"
                         android:textColor="@color/text_black"
                         android:textSize="16sp"
                         android:textStyle="bold" />
@@ -188,7 +231,7 @@
             <androidx.cardview.widget.CardView
                 android:id="@+id/adminLogoutCard"
                 android:layout_width="0dp"
-                android:layout_height="170dp"
+                android:layout_height="160dp"
                 android:layout_rowWeight="1"
                 android:layout_columnWeight="1"
                 android:layout_margin="12dp"

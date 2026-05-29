@@ -40,7 +40,14 @@ class UserReviewAdapter(
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val review = reviews[position]
         holder.name.text = review.studentName
-        holder.rating.rating = review.rating
+        
+        if (review.itemId == "REPORT") {
+            holder.rating.visibility = View.GONE
+        } else {
+            holder.rating.visibility = View.VISIBLE
+            holder.rating.rating = review.rating
+        }
+
         holder.comment.text = review.comment
 
         val currentUserId = FirebaseAuth.getInstance().currentUser?.uid

@@ -2,12 +2,10 @@ package com.baust.cafe.activities
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import com.baust.cafe.R
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
@@ -33,7 +31,6 @@ class HomeActivity : BaseUserActivity() {
     private lateinit var menuRecyclerView: RecyclerView
     private lateinit var popularFoodAdapter: PopularFoodAdapter
     private val foodList = mutableListOf<MenuItem>()
-    private var currentProfileImageData: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,53 +55,10 @@ class HomeActivity : BaseUserActivity() {
         
         setupBottomNavigation(R.id.navHome)
 
-        // Profile Photo Click -> Edit Profile
+        // Photo Click -> Go directly to Edit Profile
         profileImage.setOnClickListener {
             startActivity(Intent(this, EditProfileActivity::class.java))
         }
-
-        // Profile Photo Long Click -> See Big Picture
-        profileImage.setOnLongClickListener {
-            showBigPicture()
-            true
-        }
-    }
-
-    private fun showBigPicture() {
-        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_user_details, null)
-        val dialog = AlertDialog.Builder(this)
-            .setView(dialogView)
-            .create()
-
-        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
-
-        val bigImage = dialogView.findViewById<ImageView>(R.id.dialogUserImage)
-        val nameText = dialogView.findViewById<TextView>(R.id.dialogUserName)
-        val detailsText = dialogView.findViewById<TextView>(R.id.dialogUserDetails)
-        val okBtn = dialogView.findViewById<android.widget.Button>(R.id.dialogOkButton)
-
-        nameText.text = "Profile Picture"
-        detailsText.visibility = View.GONE
-        
-        // Load the image into the big view
-        if (currentProfileImageData != null) {
-            if (currentProfileImageData!!.startsWith("http")) {
-                com.bumptech.glide.Glide.with(this).load(currentProfileImageData).into(bigImage)
-            } else {
-                try {
-                    val imageBytes = android.util.Base64.decode(currentProfileImageData, android.util.Base64.DEFAULT)
-                    val bitmap = android.graphics.BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
-                    bigImage.setImageBitmap(bitmap)
-                } catch (e: Exception) {
-                    bigImage.setImageResource(R.drawable.cafe_logo)
-                }
-            }
-        } else {
-            bigImage.setImageResource(R.drawable.cafe_logo)
-        }
-
-        okBtn.setOnClickListener { dialog.dismiss() }
-        dialog.show()
     }
 
     private fun setupMenuRecyclerView() {
@@ -190,7 +144,6 @@ class HomeActivity : BaseUserActivity() {
                 if (snapshot.exists()) {
                     val name = snapshot.child("name").value.toString()
                     val imageUrl = snapshot.child("profileImage").value.toString()
-                    currentProfileImageData = imageUrl
 
                     if (name.isNotEmpty() && name != "null") {
                         userNameText.text = "$name - Campus Treats"

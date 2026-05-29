@@ -122,6 +122,11 @@
             android:name=".activities.UserNotificationsActivity"
             android:exported="false" />
 
+        <!-- Report Problem Activity -->
+        <activity
+            android:name=".activities.ReportProblemActivity"
+            android:exported="false" />
+
     </application>
 
 </manifest>

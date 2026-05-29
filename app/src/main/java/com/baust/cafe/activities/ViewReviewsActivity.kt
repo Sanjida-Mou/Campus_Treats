@@ -7,6 +7,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.widget.Toolbar
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.baust.cafe.R
@@ -23,10 +24,20 @@ class ViewReviewsActivity : BaseAdminActivity() {
     private lateinit var adapter: AdminReviewAdapter
     private val reviewsList = mutableListOf<Review>()
     private lateinit var database: DatabaseReference
+    private var viewMode: String = "FOOD" // "FOOD" or "REPORTS"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_view_reviews)
+
+        viewMode = intent.getStringExtra("VIEW_MODE") ?: "FOOD"
+        
+        val toolbar = findViewById<Toolbar>(R.id.reviewsToolbar)
+        if (viewMode == "REPORTS") {
+            toolbar.title = "User Problem Reports"
+        } else {
+            toolbar.title = "Food Reviews & Ratings"
+        }
 
         recyclerView = findViewById(R.id.reviewsRecyclerView)
         recyclerView.layoutManager = LinearLayoutManager(this)
@@ -94,9 +105,19 @@ class ViewReviewsActivity : BaseAdminActivity() {
                 reviewsList.clear()
                 for (reviewSnapshot in snapshot.children) {
                     val review = reviewSnapshot.getValue(Review::class.java)
-                    review?.let { reviewsList.add(it) }
+                    if (review != null) {
+                        if (viewMode == "REPORTS") {
+                            if (review.itemId == "REPORT") {
+                                reviewsList.add(review)
+                            }
+                        } else {
+                            if (review.itemId != "REPORT") {
+                                reviewsList.add(review)
+                            }
+                        }
+                    }
                 }
-                reviewsList.reverse() // Newest first
+                reviewsList.reverse()
                 adapter.updateReviews(reviewsList)
             }
 

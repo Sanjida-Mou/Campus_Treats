@@ -38,8 +38,18 @@ class AdminReviewAdapter(
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val review = reviews[position]
         holder.name.text = review.studentName
-        holder.rating.rating = review.rating
-        holder.item.text = "Item: ${review.itemName}"
+        
+        if (review.itemId == "REPORT") {
+            holder.rating.visibility = View.GONE
+            holder.item.text = "Type: SYSTEM PROBLEM"
+            holder.item.setTextColor(android.graphics.Color.RED)
+        } else {
+            holder.rating.visibility = View.VISIBLE
+            holder.rating.rating = review.rating
+            holder.item.text = "Item: ${review.itemName}"
+            holder.item.setTextColor(holder.itemView.context.getColor(R.color.text_hint))
+        }
+        
         holder.comment.text = review.comment
 
         // Load User Profile Image
@@ -68,6 +78,7 @@ class AdminReviewAdapter(
         if (review.reply.isNotEmpty()) {
             holder.replyText.text = review.reply
             holder.replyText.visibility = View.VISIBLE
+            holder.replyText.setTextColor(holder.itemView.context.getColor(R.color.text_black))
         } else {
             holder.replyText.text = "Not replied yet"
         }
@@ -78,6 +89,21 @@ class AdminReviewAdapter(
                 FirebaseDatabase.getInstance().getReference("Reviews")
                     .child(review.reviewId).child("reply").setValue(replyStr)
                 holder.replyEdit.setText("")
+                
+                // NOTIFY USER OF REPLY
+                val userNotifyDb = FirebaseDatabase.getInstance().getReference("UserNotifications").child(review.studentId)
+                val id = userNotifyDb.push().key
+                if (id != null) {
+                    val notification = com.baust.cafe.models.UserNotification(
+                        id = id,
+                        title = "Admin Replied",
+                        message = "The admin has replied to your ${if(review.itemId == "REPORT") "report" else "review"}.",
+                        type = "review_reply",
+                        timestamp = System.currentTimeMillis(),
+                        read = false
+                    )
+                    userNotifyDb.child(id).setValue(notification)
+                }
             }
         }
     }

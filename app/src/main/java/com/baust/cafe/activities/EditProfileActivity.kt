@@ -5,7 +5,9 @@ import android.app.ProgressDialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.widget.*
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.baust.cafe.R
 import com.baust.cafe.models.User
@@ -13,15 +15,12 @@ import com.bumptech.glide.Glide
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.storage.FirebaseStorage
-import com.google.firebase.storage.StorageException
 import de.hdodenhof.circleimageview.CircleImageView
 
 class EditProfileActivity : AppCompatActivity() {
 
     private lateinit var auth: FirebaseAuth
     private lateinit var database: FirebaseDatabase
-    private lateinit var storage: FirebaseStorage
     
     private lateinit var profileImageView: CircleImageView
     private lateinit var editName: EditText
@@ -46,7 +45,6 @@ class EditProfileActivity : AppCompatActivity() {
 
         auth = FirebaseAuth.getInstance()
         database = FirebaseDatabase.getInstance()
-        storage = FirebaseStorage.getInstance()
 
         profileImageView = findViewById(R.id.editProfileImage)
         editName = findViewById(R.id.editName)
@@ -71,7 +69,44 @@ class EditProfileActivity : AppCompatActivity() {
             updateProfile()
         }
 
+        // PHOTO CLICK -> Show Big Picture
+        profileImageView.setOnClickListener {
+            showBigPicture()
+        }
+
         loadCurrentData()
+    }
+
+    private fun showBigPicture() {
+        val user = currentUser ?: return
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_user_details, null)
+        val dialog = AlertDialog.Builder(this).setView(dialogView).create()
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+
+        val bigImage = dialogView.findViewById<ImageView>(R.id.dialogUserImage)
+        val nameText = dialogView.findViewById<TextView>(R.id.dialogUserName)
+        val detailsText = dialogView.findViewById<TextView>(R.id.dialogUserDetails)
+        val okBtn = dialogView.findViewById<android.widget.Button>(R.id.dialogOkButton)
+
+        nameText.text = user.name
+        detailsText.text = "Student ID: ${user.studentId}"
+        
+        val imageUrl = user.profileImage
+        if (imageUrl.isNotEmpty() && imageUrl != "null") {
+            if (imageUrl.startsWith("http")) {
+                Glide.with(this).load(imageUrl).into(bigImage)
+            } else {
+                try {
+                    val imageBytes = android.util.Base64.decode(imageUrl, android.util.Base64.DEFAULT)
+                    val bitmap = android.graphics.BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+                    bigImage.setImageBitmap(bitmap)
+                } catch (e: Exception) {
+                    bigImage.setImageResource(R.drawable.ic_person)
+                }
+            }
+        }
+        okBtn.setOnClickListener { dialog.dismiss() }
+        dialog.show()
     }
 
     private fun openGallery() {
@@ -102,10 +137,8 @@ class EditProfileActivity : AppCompatActivity() {
                     
                     if (it.profileImage.isNotEmpty()) {
                         if (it.profileImage.startsWith("http")) {
-                            // It's a normal URL
                             Glide.with(this).load(it.profileImage).placeholder(R.drawable.cafe_logo).into(profileImageView)
                         } else {
-                            // It's your personal photo (Base64)
                             try {
                                 val imageBytes = android.util.Base64.decode(it.profileImage, android.util.Base64.DEFAULT)
                                 val decodedImage = android.graphics.BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
@@ -135,17 +168,13 @@ class EditProfileActivity : AppCompatActivity() {
         progressDialog.show()
 
         if (selectedImageUri != null) {
-            // CONVERT IMAGE TO STRING (Base64)
             try {
                 val inputStream = contentResolver.openInputStream(selectedImageUri!!)
                 val bitmap = android.graphics.BitmapFactory.decodeStream(inputStream)
-                
-                // Compress image so it fits in Database
                 val outputStream = java.io.ByteArrayOutputStream()
                 bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 25, outputStream)
                 val byteArray = outputStream.toByteArray()
                 val base64Image = android.util.Base64.encodeToString(byteArray, android.util.Base64.DEFAULT)
-                
                 saveToDatabase(userId, name, phone, location, studentId, base64Image)
             } catch (e: Exception) {
                 progressDialog.dismiss()

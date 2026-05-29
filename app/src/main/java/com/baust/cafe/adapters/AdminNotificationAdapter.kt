@@ -51,6 +51,11 @@ class AdminNotificationAdapter(
                 holder.icon.rotation = 45f
                 holder.iconBg.backgroundTintList = android.content.res.ColorStateList.valueOf(holder.itemView.context.getColor(R.color.card_pink))
             }
+            "report" -> {
+                holder.icon.setImageResource(android.R.drawable.ic_dialog_alert)
+                holder.icon.rotation = 0f
+                holder.iconBg.backgroundTintList = android.content.res.ColorStateList.valueOf(holder.itemView.context.getColor(R.color.card_pink))
+            }
         }
 
         holder.itemView.setOnClickListener { onItemClick(notify) }

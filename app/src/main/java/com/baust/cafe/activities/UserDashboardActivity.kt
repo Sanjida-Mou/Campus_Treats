@@ -2,6 +2,8 @@ package com.baust.cafe.activities
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -32,7 +34,7 @@ class UserDashboardActivity : BaseUserActivity() {
         val browseMenuCard = findViewById<CardView>(R.id.browseMenuCard)
         val myOrdersCard = findViewById<CardView>(R.id.myOrdersCard)
         val myCartCard = findViewById<CardView>(R.id.myCartCard)
-        val giveReviewCard = findViewById<CardView>(R.id.giveReviewCard)
+        val reportProblemCard = findViewById<CardView>(R.id.giveReviewCard)
         val profileDetailsCard = findViewById<CardView>(R.id.profileDetailsCard)
         val logoutCard = findViewById<CardView>(R.id.logoutCard)
 
@@ -49,8 +51,8 @@ class UserDashboardActivity : BaseUserActivity() {
             startActivity(Intent(this, CartActivity::class.java))
         }
 
-        giveReviewCard.setOnClickListener {
-            startActivity(Intent(this, RateUsActivity::class.java))
+        reportProblemCard.setOnClickListener {
+            startActivity(Intent(this, ReportProblemActivity::class.java))
         }
 
         profileDetailsCard.setOnClickListener {
@@ -60,7 +62,7 @@ class UserDashboardActivity : BaseUserActivity() {
         logoutCard.setOnClickListener {
             showLogoutDialog()
         }
-
+        
         setupNavigation()
         loadUserData()
         
@@ -87,10 +89,44 @@ class UserDashboardActivity : BaseUserActivity() {
             startActivity(Intent(this, UserNotificationsActivity::class.java))
             finish()
         }
-
+        
+        // CLICK ON LARGE NAV PROFILE ICON -> Show Big Picture
         findViewById<android.widget.ImageView>(R.id.navProfile)?.setOnClickListener {
-            // Already on Profile
+            showBigPicture()
         }
+    }
+
+    private fun showBigPicture() {
+        val user = currentUser ?: return
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_user_details, null)
+        val dialog = AlertDialog.Builder(this).setView(dialogView).create()
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+
+        val bigImage = dialogView.findViewById<ImageView>(R.id.dialogUserImage)
+        val nameText = dialogView.findViewById<TextView>(R.id.dialogUserName)
+        val detailsText = dialogView.findViewById<TextView>(R.id.dialogUserDetails)
+        val okBtn = dialogView.findViewById<android.widget.Button>(R.id.dialogOkButton)
+
+        nameText.text = user.name
+        detailsText.text = "Student ID: ${user.studentId}"
+        
+        val imageUrl = user.profileImage
+        if (imageUrl.isNotEmpty() && imageUrl != "null") {
+            if (imageUrl.startsWith("http")) {
+                com.bumptech.glide.Glide.with(this).load(imageUrl).into(bigImage)
+            } else {
+                try {
+                    val imageBytes = android.util.Base64.decode(imageUrl, android.util.Base64.DEFAULT)
+                    val bitmap = android.graphics.BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+                    bigImage.setImageBitmap(bitmap)
+                } catch (e: Exception) {
+                    bigImage.setImageResource(R.drawable.ic_person)
+                }
+            }
+        }
+
+        okBtn.setOnClickListener { dialog.dismiss() }
+        dialog.show()
     }
 
     private fun showLogoutDialog() {
@@ -104,15 +140,13 @@ class UserDashboardActivity : BaseUserActivity() {
             startActivity(intent)
             finish()
         }
-        builder.setNegativeButton("No") { dialog, _ -> dialog.dismiss() }
+        builder.setNegativeButton("No", null)
         builder.show()
     }
 
     private fun loadUserData() {
         val user = auth.currentUser ?: return
         val database = FirebaseDatabase.getInstance().getReference("Users").child(user.uid)
-
-        welcomeUserText.text = "Welcome back, ${user.displayName ?: "User"}"
 
         database.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {

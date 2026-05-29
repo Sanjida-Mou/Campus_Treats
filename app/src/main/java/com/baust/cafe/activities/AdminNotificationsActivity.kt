@@ -62,7 +62,14 @@ class AdminNotificationsActivity : BaseAdminActivity() {
                 startActivity(Intent(this, ViewOrdersActivity::class.java))
             }
             "review" -> {
-                startActivity(Intent(this, ViewReviewsActivity::class.java))
+                val intent = Intent(this, ViewReviewsActivity::class.java)
+                intent.putExtra("VIEW_MODE", "FOOD")
+                startActivity(intent)
+            }
+            "report" -> {
+                val intent = Intent(this, ViewReviewsActivity::class.java)
+                intent.putExtra("VIEW_MODE", "REPORTS")
+                startActivity(intent)
             }
         }
     }

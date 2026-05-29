@@ -60,23 +60,31 @@ class CartAdapter(
         }
 
         holder.plusButton.setOnClickListener {
-            val newItem = item.copy(quantity = item.quantity + 1)
-            cartItems[position] = newItem
-            notifyItemChanged(position)
-            onQuantityChanged()
+            val currentPos = holder.adapterPosition
+            if (currentPos != RecyclerView.NO_POSITION) {
+                val item = cartItems[currentPos]
+                val newItem = item.copy(quantity = item.quantity + 1)
+                cartItems[currentPos] = newItem
+                notifyItemChanged(currentPos)
+                onQuantityChanged()
+            }
         }
 
         holder.minusButton.setOnClickListener {
-            if (item.quantity > 1) {
-                val newItem = item.copy(quantity = item.quantity - 1)
-                cartItems[position] = newItem
-                notifyItemChanged(position)
-                onQuantityChanged()
-            } else {
-                cartItems.removeAt(position)
-                notifyItemRemoved(position)
-                notifyItemRangeChanged(position, cartItems.size)
-                onQuantityChanged()
+            val currentPos = holder.adapterPosition
+            if (currentPos != RecyclerView.NO_POSITION) {
+                val item = cartItems[currentPos]
+                if (item.quantity > 1) {
+                    val newItem = item.copy(quantity = item.quantity - 1)
+                    cartItems[currentPos] = newItem
+                    notifyItemChanged(currentPos)
+                    onQuantityChanged()
+                } else {
+                    cartItems.removeAt(currentPos)
+                    notifyItemRemoved(currentPos)
+                    notifyItemRangeChanged(currentPos, cartItems.size)
+                    onQuantityChanged()
+                }
             }
         }
     }

@@ -376,6 +376,7 @@ class CheckoutActivity : AppCompatActivity() {
         placeOrderButton.isEnabled = false
         database.child(orderId).setValue(order)
             .addOnSuccessListener {
+                com.baust.cafe.utils.CartManager.clearCart()
                 val currentUserName = userNameText.text.toString().split(" - ")[0]
                 saveAdminNotification("New Order Received!", "@$currentUserName ordered food - Tk $totalAmount", "order")
                 Toast.makeText(this, "Order placed successfully via $paymentMethod!", Toast.LENGTH_LONG).show()
@@ -407,7 +408,14 @@ class CheckoutActivity : AppCompatActivity() {
     override fun onResume() { super.onResume(); mapView.onResume() }
     override fun onPause() { super.onPause(); mapView.onPause() }
     private fun setupRecyclerView() {
-        val adapter = CartAdapter(cartItems) {}
+        val adapter = CartAdapter(cartItems) {
+            calculateTotal()
+            com.baust.cafe.utils.CartManager.syncWithFirebase()
+            if (cartItems.isEmpty()) {
+                Toast.makeText(this, "Cart is empty", Toast.LENGTH_SHORT).show()
+                finish()
+            }
+        }
         checkoutRecyclerView.layoutManager = LinearLayoutManager(this)
         checkoutRecyclerView.adapter = adapter
     }

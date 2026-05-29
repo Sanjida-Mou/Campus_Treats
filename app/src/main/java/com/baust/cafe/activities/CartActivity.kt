@@ -25,7 +25,10 @@ class CartActivity : BaseUserActivity() {
         totalPriceText = findViewById(R.id.totalPriceText)
         checkoutButton = findViewById(R.id.checkoutButton)
 
-        setupRecyclerView()
+        // Load data from Firebase first
+        com.baust.cafe.utils.CartManager.loadFromFirebase {
+            setupRecyclerView()
+        }
 
         checkoutButton.setOnClickListener {
             processCheckout()
@@ -39,6 +42,7 @@ class CartActivity : BaseUserActivity() {
         
         adapter = CartAdapter(cartItems) {
             updateTotalPrice()
+            com.baust.cafe.utils.CartManager.syncWithFirebase()
         }
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = adapter

@@ -17,55 +17,49 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import java.util.Locale
 
-class RateUsActivity : BaseUserActivity() {
+class ReportProblemActivity : BaseUserActivity() {
 
-    private lateinit var ratingBar: RatingBar
     private lateinit var commentEdit: EditText
     private lateinit var submitBtn: Button
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: UserReviewAdapter
-    private val reviewsList = mutableListOf<Review>()
+    private val reportsList = mutableListOf<Review>()
     private lateinit var database: DatabaseReference
     private lateinit var auth: FirebaseAuth
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_rate_us)
+        setContentView(R.layout.activity_report_problem)
 
         auth = FirebaseAuth.getInstance()
         database = FirebaseDatabase.getInstance().getReference("Reviews")
 
-        ratingBar = findViewById(R.id.rateUsRatingBar)
-        commentEdit = findViewById(R.id.rateUsComment)
-        submitBtn = findViewById(R.id.submitRateUsBtn)
-        recyclerView = findViewById(R.id.rateUsRecyclerView)
+        commentEdit = findViewById(R.id.reportComment)
+        submitBtn = findViewById(R.id.submitReportBtn)
+        recyclerView = findViewById(R.id.reportsRecyclerView)
 
         setupRecyclerView()
-        fetchReviews()
+        fetchMyReports()
 
         submitBtn.setOnClickListener {
-            submitReview()
+            submitReport()
         }
 
-        // Ensure RatingBar is interactive
-        ratingBar.setIsIndicator(false)
-        ratingBar.rating = 5f
-
-        setupBottomNavigation(R.id.navProfile) // Highlight profile as it's a dashboard sub-feature
+        setupBottomNavigation(R.id.navProfile)
     }
 
     private fun setupRecyclerView() {
         adapter = UserReviewAdapter(
-            reviewsList,
+            reportsList,
             onUserClick = { userId -> showUserDetailsDialog(userId) },
-            onEditClick = { review -> showEditReviewDialog(review) },
-            onDeleteClick = { review -> showDeleteReviewDialog(review) }
+            onEditClick = { report -> showEditReportDialog(report) },
+            onDeleteClick = { report -> showDeleteReportDialog(report) }
         )
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = adapter
     }
 
-    private fun showEditReviewDialog(review: Review) {
+    private fun showEditReportDialog(report: Review) {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_rating, null)
         val dialog = AlertDialog.Builder(this).setView(dialogView).create()
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
@@ -75,17 +69,16 @@ class RateUsActivity : BaseUserActivity() {
         val submitBtn = dialogView.findViewById<Button>(R.id.dialogSubmitButton)
         val cancelBtn = dialogView.findViewById<Button>(R.id.dialogCancelButton)
 
-        ratingBar.rating = review.rating
-        commentEdit.setText(review.comment)
+        ratingBar.visibility = View.GONE // Hide rating for problem reports
+        commentEdit.setText(report.comment)
         commentEdit.setTextColor(getColor(R.color.text_black))
-        commentEdit.setSelection(review.comment.length)
+        commentEdit.setSelection(report.comment.length)
 
         submitBtn.setOnClickListener {
             val newComment = commentEdit.text.toString().trim()
-            val newRating = ratingBar.rating
             if (newComment.isNotEmpty()) {
-                val updates = mapOf("comment" to newComment, "rating" to newRating)
-                database.child(review.reviewId).updateChildren(updates)
+                val updates = mapOf("comment" to newComment)
+                database.child(report.reviewId).updateChildren(updates)
                 dialog.dismiss()
             }
         }
@@ -93,12 +86,12 @@ class RateUsActivity : BaseUserActivity() {
         dialog.show()
     }
 
-    private fun showDeleteReviewDialog(review: Review) {
+    private fun showDeleteReportDialog(report: Review) {
         AlertDialog.Builder(this)
-            .setTitle("Delete Review")
-            .setMessage("Are you sure you want to delete this review?")
+            .setTitle("Delete Report")
+            .setMessage("Are you sure you want to delete this report?")
             .setPositiveButton("Delete") { _, _ ->
-                database.child(review.reviewId).removeValue()
+                database.child(report.reviewId).removeValue()
             }
             .setNegativeButton("No", null)
             .show()
@@ -146,62 +139,58 @@ class RateUsActivity : BaseUserActivity() {
             }
     }
 
-    private fun fetchReviews() {
-        // Only fetch cafe reviews (where itemId is empty)
-        database.orderByChild("itemId").equalTo("")
+    private fun fetchMyReports() {
+        val userId = auth.currentUser?.uid ?: return
+        // Fetch only reports (itemId = "REPORT") belonging to this user
+        database.orderByChild("itemId").equalTo("REPORT")
             .addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    reviewsList.clear()
-                    for (reviewSnapshot in snapshot.children) {
-                        val review = reviewSnapshot.getValue(Review::class.java)
-                        review?.let { reviewsList.add(it) }
+                    reportsList.clear()
+                    for (reportSnapshot in snapshot.children) {
+                        val report = reportSnapshot.getValue(Review::class.java)
+                        if (report?.studentId == userId) {
+                            reportsList.add(report)
+                        }
                     }
-                    reviewsList.reverse()
-                    adapter.updateReviews(reviewsList)
+                    reportsList.reverse()
+                    adapter.updateReviews(reportsList)
                 }
                 override fun onCancelled(error: DatabaseError) {
-                    Toast.makeText(this@RateUsActivity, "Error: ${error.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@ReportProblemActivity, "Error: ${error.message}", Toast.LENGTH_SHORT).show()
                 }
             })
     }
 
-    private fun submitReview() {
-        val rating = ratingBar.rating
+    private fun submitReport() {
         val comment = commentEdit.text.toString().trim()
 
         if (comment.isEmpty()) {
-            Toast.makeText(this, "Please enter a comment", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Please describe the problem", Toast.LENGTH_SHORT).show()
             return
         }
 
-        val user = auth.currentUser
-        if (user == null) {
-            Toast.makeText(this, "Please login first", Toast.LENGTH_SHORT).show()
-            return
-        }
-
+        val user = auth.currentUser ?: return
         val reviewId = database.push().key ?: return
-        val review = Review(
+        val report = Review(
             reviewId = reviewId,
             studentId = user.uid,
             studentName = user.displayName ?: "Student",
-            itemId = "", // General Cafe Review
-            itemName = "Cafe Service",
-            rating = rating,
+            itemId = "REPORT",
+            itemName = "System Report",
+            rating = 5f,
             comment = comment,
             timestamp = System.currentTimeMillis()
         )
 
         submitBtn.isEnabled = false
-        database.child(reviewId).setValue(review).addOnSuccessListener {
-            saveAdminNotification("New Cafe Review!", "@${review.studentName} sent a review for Cafe Service", "review")
-            Toast.makeText(this, "Thank you for your feedback!", Toast.LENGTH_SHORT).show()
+        database.child(reviewId).setValue(report).addOnSuccessListener {
+            saveAdminNotification("Problem Reported!", "@${report.studentName} reported a system issue", "report")
+            Toast.makeText(this, "Reported successfully!", Toast.LENGTH_SHORT).show()
             commentEdit.setText("")
-            ratingBar.rating = 5f
             submitBtn.isEnabled = true
         }.addOnFailureListener {
             submitBtn.isEnabled = true
-            Toast.makeText(this, "Failed to submit: ${it.message}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Failed: ${it.message}", Toast.LENGTH_SHORT).show()
         }
     }
 
