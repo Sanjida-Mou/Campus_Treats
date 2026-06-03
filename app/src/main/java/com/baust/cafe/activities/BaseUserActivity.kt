@@ -78,7 +78,12 @@ abstract class BaseUserActivity : AppCompatActivity() {
                 }
                 updateBadgeUI(unreadCount)
             }
-            override fun onCancelled(error: DatabaseError) {}
+            override fun onCancelled(error: DatabaseError) {
+                // Ignore permission errors during logout
+                if (FirebaseAuth.getInstance().currentUser != null && error.code != DatabaseError.PERMISSION_DENIED) {
+                    android.util.Log.e("BaseUser", "Database Error: ${error.message}")
+                }
+            }
         }
         badgeDb.addValueEventListener(badgeListener!!)
     }

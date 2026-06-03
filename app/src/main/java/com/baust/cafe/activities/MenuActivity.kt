@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.baust.cafe.R
 import com.baust.cafe.adapters.MenuAdapter
 import com.baust.cafe.models.MenuItem
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import java.util.Locale
 
@@ -113,7 +114,9 @@ class MenuActivity : BaseUserActivity() {
             }
 
             override fun onCancelled(error: DatabaseError) {
-                Toast.makeText(this@MenuActivity, "Error: ${error.message}", Toast.LENGTH_SHORT).show()
+                if (FirebaseAuth.getInstance().currentUser != null && error.code != DatabaseError.PERMISSION_DENIED) {
+                    Toast.makeText(this@MenuActivity, "Error: ${error.message}", Toast.LENGTH_SHORT).show()
+                }
             }
         })
     }

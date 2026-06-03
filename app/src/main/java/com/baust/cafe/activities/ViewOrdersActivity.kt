@@ -16,6 +16,9 @@ import com.baust.cafe.models.Order
 import com.baust.cafe.models.User
 import com.baust.cafe.models.UserNotification
 import com.bumptech.glide.Glide
+import android.graphics.BitmapFactory
+import android.util.Base64
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import java.util.Locale
 
@@ -85,11 +88,11 @@ class ViewOrdersActivity : BaseAdminActivity() {
             .setMessage("Have you returned the money to the customer via bKash/Nagad?")
             .setPositiveButton("Yes, Money Returned") { _, _ ->
                 val updates = HashMap<String, Any>()
-                updates["refundStatus"] = "completed"
+                updates["refundStatus"] = "sent_to_user"
                 
                 database.child(order.orderId).updateChildren(updates).addOnSuccessListener {
-                    Toast.makeText(this, "Refund marked as completed", Toast.LENGTH_SHORT).show()
-                    pushUserNotification(order.studentId, "Refund Processed", "Your payment has been returned successfully", "order_status")
+                    Toast.makeText(this, "Refund marked as processing. User must verify.", Toast.LENGTH_SHORT).show()
+                    pushUserNotification(order.studentId, "Refund Processing", "Admin has sent your refund. Please verify receipt in your Order History.", "order_status")
                 }
             }
             .setNegativeButton("No", null)
@@ -145,7 +148,7 @@ class ViewOrdersActivity : BaseAdminActivity() {
                         } else {
                             try {
                                 val imageBytes = android.util.Base64.decode(imageUrl, android.util.Base64.DEFAULT)
-                                val bitmap = android.graphics.BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+                                val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
                                 userImage.setImageBitmap(bitmap)
                             } catch (e: Exception) {
                                 userImage.setImageResource(R.drawable.ic_person)
@@ -168,7 +171,7 @@ class ViewOrdersActivity : BaseAdminActivity() {
                 val newStatus = statuses[which]
                 database.child(order.orderId).child("status").setValue(newStatus).addOnSuccessListener {
                     when (newStatus) {
-                        "delivered" -> pushUserNotification(order.studentId, "Order Update", "Our order is delivered from BAUST Cafe", "order_status")
+                        "delivered" -> pushUserNotification(order.studentId, "Status Update", "our order delivered", "order_status")
                         "ready" -> pushUserNotification(order.studentId, "Order Ready!", "Your food is ready for pickup!", "order_status")
                         "preparing" -> pushUserNotification(order.studentId, "Order Preparing", "Your food is being prepared in the kitchen.", "order_status")
                         "cancelled" -> {
@@ -207,7 +210,9 @@ class ViewOrdersActivity : BaseAdminActivity() {
             }
 
             override fun onCancelled(error: DatabaseError) {
-                Toast.makeText(this@ViewOrdersActivity, "Database Error: ${error.message}", Toast.LENGTH_LONG).show()
+                if (FirebaseAuth.getInstance().currentUser != null && error.code != DatabaseError.PERMISSION_DENIED) {
+                    Toast.makeText(this@ViewOrdersActivity, "Database Error: ${error.message}", Toast.LENGTH_LONG).show()
+                }
             }
         })
     }

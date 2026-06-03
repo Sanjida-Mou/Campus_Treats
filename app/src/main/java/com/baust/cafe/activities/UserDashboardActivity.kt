@@ -134,6 +134,9 @@ class UserDashboardActivity : BaseUserActivity() {
         builder.setTitle("Logout")
         builder.setMessage("Are you sure you want to logout?")
         builder.setPositiveButton("Yes") { _, _ ->
+            // Clear local cart data first
+            com.baust.cafe.utils.CartManager.clearLocalData()
+
             auth.signOut()
             val intent = Intent(this, WelcomeActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -159,6 +162,9 @@ class UserDashboardActivity : BaseUserActivity() {
             }
 
             override fun onCancelled(error: DatabaseError) {
+                if (FirebaseAuth.getInstance().currentUser != null) {
+                    android.util.Log.e("UserDashboard", "Error: ${error.message}")
+                }
             }
         })
     }

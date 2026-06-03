@@ -58,6 +58,7 @@ class StudentRegisterActivity : AppCompatActivity() {
                 studentId.isEmpty() -> Toast.makeText(this, "Please enter student ID", Toast.LENGTH_SHORT).show()
                 email.isEmpty() -> Toast.makeText(this, "Please enter email", Toast.LENGTH_SHORT).show()
                 phone.isEmpty() -> Toast.makeText(this, "Please enter phone number", Toast.LENGTH_SHORT).show()
+                phone.length != 11 -> Toast.makeText(this, "Phone number must be exactly 11 digits", Toast.LENGTH_SHORT).show()
                 password.isEmpty() -> Toast.makeText(this, "Please enter password", Toast.LENGTH_SHORT).show()
                 password != confirmPassword -> Toast.makeText(this, "Passwords do not match", Toast.LENGTH_SHORT).show()
                 password.length < 6 -> Toast.makeText(this, "Password must be at least 6 characters", Toast.LENGTH_SHORT).show()

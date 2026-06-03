@@ -160,7 +160,9 @@ class RateUsActivity : BaseUserActivity() {
                     adapter.updateReviews(reviewsList)
                 }
                 override fun onCancelled(error: DatabaseError) {
-                    Toast.makeText(this@RateUsActivity, "Error: ${error.message}", Toast.LENGTH_SHORT).show()
+                    if (FirebaseAuth.getInstance().currentUser != null && error.code != DatabaseError.PERMISSION_DENIED) {
+                        Toast.makeText(this@RateUsActivity, "Error: ${error.message}", Toast.LENGTH_SHORT).show()
+                    }
                 }
             })
     }

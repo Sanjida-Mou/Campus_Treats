@@ -72,7 +72,9 @@ class AdminDashboardActivity : BaseAdminActivity() {
                     if (orderTime >= startTime) {
                         val customerName = snapshot.child("studentName").value.toString()
                         val total = snapshot.child("totalAmount").value.toString()
-                        showNotification("New Order Received!", "@$customerName ordered food - Tk $total", ViewOrdersActivity::class.java)
+                        
+                        val intent = Intent(this@AdminDashboardActivity, ViewOrdersActivity::class.java)
+                        showNotification("New Order Received!", "@$customerName ordered food - Tk $total", intent)
                     }
                 }
 
@@ -82,7 +84,9 @@ class AdminDashboardActivity : BaseAdminActivity() {
                     if (status == "cancelled") {
                         val title = "Order Cancelled"
                         val message = "@$customerName has cancelled their order"
-                        showNotification(title, message, ViewOrdersActivity::class.java)
+                        
+                        val intent = Intent(this@AdminDashboardActivity, ViewOrdersActivity::class.java)
+                        showNotification(title, message, intent)
 
                         // Save cancellation notification
                         val notifyDb = FirebaseDatabase.getInstance().getReference("AdminNotifications")
@@ -111,11 +115,15 @@ class AdminDashboardActivity : BaseAdminActivity() {
                         val itemId = snapshot.child("itemId").value.toString()
                         
                         if (itemId == "REPORT") {
-                            showNotification("New Report Received!", "@$reviewerName reported a problem", ViewReviewsActivity::class.java)
+                            val intent = Intent(this@AdminDashboardActivity, ViewReviewsActivity::class.java)
+                            intent.putExtra("VIEW_MODE", "REPORTS")
+                            showNotification("New Report Received!", "@$reviewerName reported a problem", intent)
                         } else {
                             val itemName = snapshot.child("itemName").value.toString()
                             val foodName = if (itemName.isEmpty() || itemName == "null") "Food" else itemName
-                            showNotification("New Review Received!", "@$reviewerName sent a review for $foodName", ViewReviewsActivity::class.java)
+                            val intent = Intent(this@AdminDashboardActivity, ViewReviewsActivity::class.java)
+                            intent.putExtra("VIEW_MODE", "FOOD")
+                            showNotification("New Review Received!", "@$reviewerName sent a review for $foodName", intent)
                         }
                     }
                 }
@@ -126,7 +134,7 @@ class AdminDashboardActivity : BaseAdminActivity() {
             })
     }
 
-    private fun showNotification(title: String, message: String, targetActivity: Class<*>) {
+    private fun showNotification(title: String, message: String, intent: Intent) {
         val channelId = "admin_alerts"
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
@@ -135,7 +143,6 @@ class AdminDashboardActivity : BaseAdminActivity() {
             notificationManager.createNotificationChannel(channel)
         }
 
-        val intent = Intent(this, targetActivity)
         val pendingIntent = PendingIntent.getActivity(this, System.currentTimeMillis().toInt(), intent, PendingIntent.FLAG_IMMUTABLE)
 
         val notification = NotificationCompat.Builder(this, channelId)

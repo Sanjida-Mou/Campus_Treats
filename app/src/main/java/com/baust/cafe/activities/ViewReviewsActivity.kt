@@ -15,6 +15,7 @@ import com.baust.cafe.adapters.AdminReviewAdapter
 import com.baust.cafe.models.Review
 import com.baust.cafe.models.User
 import com.bumptech.glide.Glide
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import java.util.Locale
 
@@ -122,7 +123,9 @@ class ViewReviewsActivity : BaseAdminActivity() {
             }
 
             override fun onCancelled(error: DatabaseError) {
-                Toast.makeText(this@ViewReviewsActivity, "Error: ${error.message}", Toast.LENGTH_SHORT).show()
+                if (FirebaseAuth.getInstance().currentUser != null && error.code != DatabaseError.PERMISSION_DENIED) {
+                    Toast.makeText(this@ViewReviewsActivity, "Error: ${error.message}", Toast.LENGTH_SHORT).show()
+                }
             }
         })
     }

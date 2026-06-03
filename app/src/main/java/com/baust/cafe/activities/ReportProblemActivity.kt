@@ -156,7 +156,9 @@ class ReportProblemActivity : BaseUserActivity() {
                     adapter.updateReviews(reportsList)
                 }
                 override fun onCancelled(error: DatabaseError) {
-                    Toast.makeText(this@ReportProblemActivity, "Error: ${error.message}", Toast.LENGTH_SHORT).show()
+                    if (FirebaseAuth.getInstance().currentUser != null && error.code != DatabaseError.PERMISSION_DENIED) {
+                        Toast.makeText(this@ReportProblemActivity, "Error: ${error.message}", Toast.LENGTH_SHORT).show()
+                    }
                 }
             })
     }

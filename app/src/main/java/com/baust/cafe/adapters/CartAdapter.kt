@@ -16,6 +16,7 @@ import java.util.Locale
 
 class CartAdapter(
     private var cartItems: MutableList<CartItem>,
+    private val isEditable: Boolean = true,
     private val onQuantityChanged: () -> Unit
 ) : RecyclerView.Adapter<CartAdapter.CartViewHolder>() {
 
@@ -26,6 +27,8 @@ class CartAdapter(
         val plusButton: ImageButton = itemView.findViewById(R.id.plusButton)
         val minusButton: ImageButton = itemView.findViewById(R.id.minusButton)
         val itemImage: ImageView = itemView.findViewById(R.id.cartItemImage)
+        val quantityControlLayout: View = itemView.findViewById(R.id.quantityControlLayout)
+        val quantitySummary: TextView = itemView.findViewById(R.id.quantitySummary)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CartViewHolder {
@@ -38,6 +41,16 @@ class CartAdapter(
         holder.nameText.text = item.itemName
         holder.priceText.text = String.format(Locale.getDefault(), "Tk. %.2f", item.price)
         holder.quantityText.text = item.quantity.toString()
+        holder.quantitySummary.text = "Qty: ${item.quantity}"
+
+        // UI Controls logic
+        if (isEditable) {
+            holder.quantityControlLayout.visibility = View.VISIBLE
+            holder.quantitySummary.visibility = View.GONE
+        } else {
+            holder.quantityControlLayout.visibility = View.GONE
+            holder.quantitySummary.visibility = View.VISIBLE
+        }
 
         // Support for both URL and Base64
         if (item.imageUrl.isNotEmpty()) {
@@ -62,8 +75,8 @@ class CartAdapter(
         holder.plusButton.setOnClickListener {
             val currentPos = holder.adapterPosition
             if (currentPos != RecyclerView.NO_POSITION) {
-                val item = cartItems[currentPos]
-                val newItem = item.copy(quantity = item.quantity + 1)
+                val cartItem = cartItems[currentPos]
+                val newItem = cartItem.copy(quantity = cartItem.quantity + 1)
                 cartItems[currentPos] = newItem
                 notifyItemChanged(currentPos)
                 onQuantityChanged()
@@ -73,9 +86,9 @@ class CartAdapter(
         holder.minusButton.setOnClickListener {
             val currentPos = holder.adapterPosition
             if (currentPos != RecyclerView.NO_POSITION) {
-                val item = cartItems[currentPos]
-                if (item.quantity > 1) {
-                    val newItem = item.copy(quantity = item.quantity - 1)
+                val cartItem = cartItems[currentPos]
+                if (cartItem.quantity > 1) {
+                    val newItem = cartItem.copy(quantity = cartItem.quantity - 1)
                     cartItems[currentPos] = newItem
                     notifyItemChanged(currentPos)
                     onQuantityChanged()

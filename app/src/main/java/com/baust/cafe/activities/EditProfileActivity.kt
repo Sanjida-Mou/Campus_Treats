@@ -3,9 +3,12 @@ package com.baust.cafe.activities
 import android.app.Activity
 import android.app.ProgressDialog
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
+import android.util.Base64
 import android.view.LayoutInflater
+import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -16,6 +19,8 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import de.hdodenhof.circleimageview.CircleImageView
+import java.io.ByteArrayOutputStream
+import java.util.HashMap
 
 class EditProfileActivity : AppCompatActivity() {
 
@@ -30,6 +35,7 @@ class EditProfileActivity : AppCompatActivity() {
     private lateinit var saveButton: Button
     private lateinit var backButton: ImageView
     private lateinit var changeImageFab: FloatingActionButton
+    private lateinit var imgLocationPicker: ImageView
     private lateinit var progressDialog: ProgressDialog
 
     private var selectedImageUri: Uri? = null
@@ -37,6 +43,7 @@ class EditProfileActivity : AppCompatActivity() {
 
     companion object {
         private const val PICK_IMAGE_REQUEST = 1
+        private const val SELECT_LOCATION_REQUEST = 2
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,6 +61,7 @@ class EditProfileActivity : AppCompatActivity() {
         saveButton = findViewById(R.id.saveProfileButton)
         backButton = findViewById(R.id.backButton)
         changeImageFab = findViewById(R.id.changeImageFab)
+        imgLocationPicker = findViewById(R.id.imgLocationPicker)
 
         progressDialog = ProgressDialog(this)
         progressDialog.setMessage("Updating profile...")
@@ -61,17 +69,15 @@ class EditProfileActivity : AppCompatActivity() {
 
         backButton.setOnClickListener { finish() }
 
-        changeImageFab.setOnClickListener {
-            openGallery()
-        }
+        changeImageFab.setOnClickListener { openGallery() }
 
-        saveButton.setOnClickListener {
-            updateProfile()
-        }
+        saveButton.setOnClickListener { updateProfile() }
 
-        // PHOTO CLICK -> Show Big Picture
-        profileImageView.setOnClickListener {
-            showBigPicture()
+        profileImageView.setOnClickListener { showBigPicture() }
+
+        imgLocationPicker.setOnClickListener {
+            val intent = Intent(this, SelectLocationActivity::class.java)
+            startActivityForResult(intent, SELECT_LOCATION_REQUEST)
         }
 
         loadCurrentData()
@@ -86,7 +92,7 @@ class EditProfileActivity : AppCompatActivity() {
         val bigImage = dialogView.findViewById<ImageView>(R.id.dialogUserImage)
         val nameText = dialogView.findViewById<TextView>(R.id.dialogUserName)
         val detailsText = dialogView.findViewById<TextView>(R.id.dialogUserDetails)
-        val okBtn = dialogView.findViewById<android.widget.Button>(R.id.dialogOkButton)
+        val okBtn = dialogView.findViewById<Button>(R.id.dialogOkButton)
 
         nameText.text = user.name
         detailsText.text = "Student ID: ${user.studentId}"
@@ -97,8 +103,8 @@ class EditProfileActivity : AppCompatActivity() {
                 Glide.with(this).load(imageUrl).into(bigImage)
             } else {
                 try {
-                    val imageBytes = android.util.Base64.decode(imageUrl, android.util.Base64.DEFAULT)
-                    val bitmap = android.graphics.BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+                    val imageBytes = Base64.decode(imageUrl, Base64.DEFAULT)
+                    val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
                     bigImage.setImageBitmap(bitmap)
                 } catch (e: Exception) {
                     bigImage.setImageResource(R.drawable.ic_person)
@@ -118,9 +124,19 @@ class EditProfileActivity : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == PICK_IMAGE_REQUEST && resultCode == Activity.RESULT_OK && data != null && data.data != null) {
-            selectedImageUri = data.data
-            profileImageView.setImageURI(selectedImageUri)
+        if (resultCode == Activity.RESULT_OK && data != null) {
+            when (requestCode) {
+                PICK_IMAGE_REQUEST -> {
+                    selectedImageUri = data.data
+                    profileImageView.setImageURI(selectedImageUri)
+                }
+                SELECT_LOCATION_REQUEST -> {
+                    val address = data.getStringExtra("SELECTED_ADDRESS")
+                    if (!address.isNullOrEmpty()) {
+                        editLocation.setText(address)
+                    }
+                }
+            }
         }
     }
 
@@ -140,11 +156,11 @@ class EditProfileActivity : AppCompatActivity() {
                             Glide.with(this).load(it.profileImage).placeholder(R.drawable.cafe_logo).into(profileImageView)
                         } else {
                             try {
-                                val imageBytes = android.util.Base64.decode(it.profileImage, android.util.Base64.DEFAULT)
-                                val decodedImage = android.graphics.BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+                                val imageBytes = Base64.decode(it.profileImage, Base64.DEFAULT)
+                                val decodedImage = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
                                 profileImageView.setImageBitmap(decodedImage)
                             } catch (e: Exception) {
-                                profileImageView.setImageResource(R.drawable.cafe_logo)
+                                profileImageView.setImageResource(R.drawable.ic_person)
                             }
                         }
                     }
@@ -170,11 +186,11 @@ class EditProfileActivity : AppCompatActivity() {
         if (selectedImageUri != null) {
             try {
                 val inputStream = contentResolver.openInputStream(selectedImageUri!!)
-                val bitmap = android.graphics.BitmapFactory.decodeStream(inputStream)
-                val outputStream = java.io.ByteArrayOutputStream()
+                val bitmap = BitmapFactory.decodeStream(inputStream)
+                val outputStream = ByteArrayOutputStream()
                 bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 25, outputStream)
                 val byteArray = outputStream.toByteArray()
-                val base64Image = android.util.Base64.encodeToString(byteArray, android.util.Base64.DEFAULT)
+                val base64Image = Base64.encodeToString(byteArray, Base64.DEFAULT)
                 saveToDatabase(userId, name, phone, location, studentId, base64Image)
             } catch (e: Exception) {
                 progressDialog.dismiss()

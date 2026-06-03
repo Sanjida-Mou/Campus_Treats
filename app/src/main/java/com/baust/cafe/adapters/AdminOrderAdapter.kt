@@ -1,6 +1,8 @@
 package com.baust.cafe.adapters
 
+import android.graphics.BitmapFactory
 import android.graphics.Color
+import android.util.Base64
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -26,6 +28,7 @@ class AdminOrderAdapter(
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val name: TextView = view.findViewById(R.id.orderCustomerName)
+        val phone: TextView = view.findViewById(R.id.orderCustomerPhone)
         val profileImage: ImageView = view.findViewById(R.id.orderProfileImage)
         val items: TextView = view.findViewById(R.id.orderItems)
         val address: TextView = view.findViewById(R.id.orderAddress)
@@ -38,6 +41,7 @@ class AdminOrderAdapter(
         val btnRejectPayment: Button = view.findViewById(R.id.btnRejectPayment)
         val btnReturnPayment: Button = view.findViewById(R.id.btnReturnPayment)
         val btnDeleteOrder: Button = view.findViewById(R.id.btnDeleteOrder)
+        val adminActionLabel: TextView = view.findViewById(R.id.adminActionLabel)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -47,9 +51,10 @@ class AdminOrderAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val order = orders[position]
-        holder.name.text = "${order.studentName} (${order.studentPhone})"
+        holder.name.text = order.studentName
+        holder.phone.text = if (order.studentPhone.isNotEmpty()) "(${order.studentPhone})" else ""
         
-        // Load User Profile Image from Database
+        // Load User Profile Image
         FirebaseDatabase.getInstance().getReference("Users").child(order.studentId)
             .child("profileImage").get().addOnSuccessListener {
                 val imageUrl = it.value.toString()
@@ -73,24 +78,21 @@ class AdminOrderAdapter(
         holder.profileImage.setOnClickListener { onUserClick(order.studentId) }
 
         val itemsText = order.items.joinToString { "${it.itemName} x ${it.quantity}" }
-        holder.items.text = "Items: $itemsText"
+        holder.items.text = itemsText
         
         holder.address.text = "Location: ${order.deliveryAddress}"
         
         // Payment Info & Status
-        val payMethod = order.specialInstructions
-        holder.payment.text = payMethod
+        holder.payment.text = "Payment: ${order.specialInstructions.replace("Payment: ", "")}"
         
         if (order.transactionId.isNotEmpty()) {
             holder.trxId.text = "TrxID: ${order.transactionId} [${order.paymentStatus.replace("_", " ").uppercase()}]"
             holder.trxId.visibility = View.VISIBLE
             
-            if (order.paymentStatus == "pending_verification") {
-                holder.trxId.setTextColor(Color.parseColor("#E91E63")) // Pink for alert
-            } else if (order.paymentStatus == "rejected") {
-                holder.trxId.setTextColor(Color.RED)
-            } else {
-                holder.trxId.setTextColor(Color.parseColor("#2E7D32")) // Green for verified
+            when (order.paymentStatus) {
+                "pending_verification" -> holder.trxId.setTextColor(Color.parseColor("#E91E63"))
+                "rejected" -> holder.trxId.setTextColor(Color.RED)
+                else -> holder.trxId.setTextColor(Color.parseColor("#2E7D32"))
             }
         } else {
             holder.trxId.visibility = View.GONE
@@ -99,19 +101,38 @@ class AdminOrderAdapter(
         holder.total.text = String.format(Locale.getDefault(), "Total: Tk %.2f", order.totalAmount)
         holder.status.text = order.status.replace("_", " ").uppercase()
 
-        // Status Colors
+        // Status Colors (Matching activity_home.xml chips)
         when (order.status.lowercase()) {
-            "pending" -> holder.status.setTextColor(Color.parseColor("#FF9800"))
-            "pending_verification" -> holder.status.setTextColor(Color.parseColor("#E91E63"))
-            "preparing" -> holder.status.setTextColor(Color.parseColor("#2196F3"))
-            "ready" -> holder.status.setTextColor(Color.parseColor("#4CAF50"))
-            "delivered" -> holder.status.setTextColor(Color.parseColor("#2E7D32"))
-            "cancelled" -> holder.status.setTextColor(Color.parseColor("#F44336"))
-            else -> holder.status.setTextColor(Color.GRAY)
+            "pending" -> {
+                holder.status.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#FFF3E0"))
+                holder.status.setTextColor(Color.parseColor("#FF9800"))
+            }
+            "pending_verification" -> {
+                holder.status.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#FCE4EC"))
+                holder.status.setTextColor(Color.parseColor("#E91E63"))
+            }
+            "preparing" -> {
+                holder.status.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#E3F2FD"))
+                holder.status.setTextColor(Color.parseColor("#2196F3"))
+            }
+            "ready" -> {
+                holder.status.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#E8F5E9"))
+                holder.status.setTextColor(Color.parseColor("#4CAF50"))
+            }
+            "delivered" -> {
+                holder.status.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#C8E6C9"))
+                holder.status.setTextColor(Color.parseColor("#2E7D32"))
+            }
+            "cancelled" -> {
+                holder.status.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#FFEBEE"))
+                holder.status.setTextColor(Color.parseColor("#F44336"))
+            }
         }
 
-        // Admin Action Buttons
+        // Admin Action Buttons visibility logic
         if (order.paymentStatus == "pending_verification") {
+            holder.adminActionLabel.text = "Payment Verification:"
+            holder.adminActionLabel.visibility = View.VISIBLE
             holder.btnVerifyPayment.visibility = View.VISIBLE
             holder.btnRejectPayment.visibility = View.VISIBLE
             holder.btnUpdateStatus.visibility = View.GONE
@@ -121,34 +142,34 @@ class AdminOrderAdapter(
             holder.btnVerifyPayment.visibility = View.GONE
             holder.btnRejectPayment.visibility = View.GONE
             
-            // Show update status only for active/verified orders
             if (order.status == "delivered" || order.status == "cancelled" || order.paymentStatus == "rejected") {
                 holder.btnUpdateStatus.visibility = View.GONE
             } else {
                 holder.btnUpdateStatus.visibility = View.VISIBLE
             }
 
-            // Return Payment Button logic
             val isOnlinePayment = order.specialInstructions.contains("bKash", ignoreCase = true) || 
                                  order.specialInstructions.contains("Nagad", ignoreCase = true)
             
             if (order.status == "cancelled" && isOnlinePayment && order.paymentStatus == "verified" && order.refundStatus != "completed") {
+                holder.adminActionLabel.text = "Refund Action Required:"
+                holder.adminActionLabel.visibility = View.VISIBLE
                 holder.btnReturnPayment.visibility = View.VISIBLE
-                if (order.refundStatus == "pending") {
-                    holder.btnReturnPayment.text = "Returning..."
+                if (order.refundStatus == "sent_to_user") {
+                    holder.btnReturnPayment.text = "Sent (Waiting User)"
                     holder.btnReturnPayment.isEnabled = false
+                    holder.btnReturnPayment.alpha = 0.7f
                 } else {
-                    holder.btnReturnPayment.text = "Return Payment"
+                    holder.btnReturnPayment.text = "Refund Money"
                     holder.btnReturnPayment.isEnabled = true
+                    holder.btnReturnPayment.alpha = 1.0f
                 }
             } else {
                 holder.btnReturnPayment.visibility = View.GONE
+                holder.adminActionLabel.visibility = View.GONE
             }
 
-            // Delete History Button for Delivered/Cancelled
             if (order.status == "delivered" || order.status == "cancelled") {
-                // If it needs refund, wait for refund completion before allowing delete? 
-                // Let's just show it for delivered/cancelled
                 holder.btnDeleteOrder.visibility = View.VISIBLE
             } else {
                 holder.btnDeleteOrder.visibility = View.GONE

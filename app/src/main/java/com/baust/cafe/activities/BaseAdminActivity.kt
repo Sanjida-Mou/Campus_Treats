@@ -8,6 +8,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.baust.cafe.R
 import com.baust.cafe.models.UserNotification
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 
 abstract class BaseAdminActivity : AppCompatActivity() {
@@ -53,7 +54,12 @@ abstract class BaseAdminActivity : AppCompatActivity() {
                 }
                 updateBadgeUI(unreadCount)
             }
-            override fun onCancelled(error: DatabaseError) {}
+            override fun onCancelled(error: DatabaseError) {
+                // Ignore permission errors during logout
+                if (FirebaseAuth.getInstance().currentUser != null && error.code != DatabaseError.PERMISSION_DENIED) {
+                    android.util.Log.e("BaseAdmin", "Database Error: ${error.message}")
+                }
+            }
         }
         badgeDb.addValueEventListener(badgeListener!!)
     }

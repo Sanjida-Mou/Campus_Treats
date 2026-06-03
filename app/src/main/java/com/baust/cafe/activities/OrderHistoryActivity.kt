@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.widget.Toast
 import android.content.Intent
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.baust.cafe.R
@@ -19,6 +18,7 @@ class OrderHistoryActivity : BaseUserActivity() {
     private lateinit var adapter: OrderAdapter
     private val ordersList = mutableListOf<Order>()
     private lateinit var database: DatabaseReference
+    private var historyListener: ValueEventListener? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,15 +29,24 @@ class OrderHistoryActivity : BaseUserActivity() {
         recyclerView = findViewById(R.id.orderHistoryRecyclerView)
         recyclerView.layoutManager = LinearLayoutManager(this)
         
-        adapter = OrderAdapter(ordersList) { order ->
-            handleOrderAction(order)
-        }
+        adapter = OrderAdapter(
+            ordersList,
+            onActionClick = { order -> handleOrderAction(order) },
+            onVerifyRefundClick = { order -> showVerifyRefundDialog(order) }
+        )
         recyclerView.adapter = adapter
 
         fetchOrderHistory()
         setupNavigation()
         
-        setupBottomNavigation(R.id.navCart) // History is mapped to Cart icon in some layouts? Wait, history icon exists.
+        setupBottomNavigation(R.id.navCart)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        historyListener?.let { 
+            database.removeEventListener(it)
+        }
     }
 
     private fun handleOrderAction(order: Order) {
@@ -59,13 +68,37 @@ class OrderHistoryActivity : BaseUserActivity() {
             .setTitle("Cancel Order")
             .setMessage("Are you sure you want to cancel this order? Admin will be notified.")
             .setPositiveButton("Cancel Order") { _, _ ->
-                database.child(order.orderId).child("status").setValue("cancelled")
+                val updates = HashMap<String, Any>()
+                updates["status"] = "cancelled"
+                
+                // If it was a verified online payment, mark refund as requested
+                val isOnlinePayment = order.specialInstructions.contains("bKash", ignoreCase = true) || 
+                                     order.specialInstructions.contains("Nagad", ignoreCase = true)
+                if (isOnlinePayment && order.paymentStatus == "verified") {
+                    updates["refundStatus"] = "requested"
+                }
+
+                database.child(order.orderId).updateChildren(updates)
                     .addOnSuccessListener {
                         saveAdminNotification("Order Cancelled", "@${order.studentName} has cancelled their order", "cancellation")
                         Toast.makeText(this, "Order cancelled successfully", Toast.LENGTH_SHORT).show()
                     }
             }
             .setNegativeButton("No", null)
+            .show()
+    }
+
+    private fun showVerifyRefundDialog(order: Order) {
+        AlertDialog.Builder(this)
+            .setTitle("Verify Refund Receipt")
+            .setMessage("Did you receive your money back in your bKash/Nagad account? If yes, the order will be removed.")
+            .setPositiveButton("Yes, Received") { _, _ ->
+                // Final step: Remove order from database as requested
+                database.child(order.orderId).removeValue().addOnSuccessListener {
+                    Toast.makeText(this, "Order completed and removed from history", Toast.LENGTH_LONG).show()
+                }
+            }
+            .setNegativeButton("Not Yet", null)
             .show()
     }
 
@@ -114,7 +147,8 @@ class OrderHistoryActivity : BaseUserActivity() {
         }
 
         findViewById<android.widget.ImageView>(R.id.navNotifications).setOnClickListener {
-            Toast.makeText(this, "No new notifications", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, UserNotificationsActivity::class.java))
+            finish()
         }
 
         findViewById<android.widget.ImageView>(R.id.navProfile).setOnClickListener {
@@ -126,21 +160,25 @@ class OrderHistoryActivity : BaseUserActivity() {
     private fun fetchOrderHistory() {
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
 
-        database.orderByChild("studentId").equalTo(userId)
-            .addValueEventListener(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    ordersList.clear()
-                    for (orderSnapshot in snapshot.children) {
-                        val order = orderSnapshot.getValue(Order::class.java)
-                        order?.let { ordersList.add(it) }
-                    }
-                    ordersList.sortByDescending { it.orderTime }
-                    adapter.updateOrders(ordersList)
+        historyListener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                ordersList.clear()
+                for (orderSnapshot in snapshot.children) {
+                    val order = orderSnapshot.getValue(Order::class.java)
+                    order?.let { ordersList.add(it) }
                 }
+                ordersList.sortByDescending { it.orderTime }
+                adapter.updateOrders(ordersList)
+            }
 
-                override fun onCancelled(error: DatabaseError) {
+            override fun onCancelled(error: DatabaseError) {
+                if (FirebaseAuth.getInstance().currentUser != null && error.code != DatabaseError.PERMISSION_DENIED) {
                     Toast.makeText(this@OrderHistoryActivity, "Failed to load orders: ${error.message}", Toast.LENGTH_SHORT).show()
                 }
-            })
+            }
+        }
+        
+        database.orderByChild("studentId").equalTo(userId)
+            .addValueEventListener(historyListener!!)
     }
 }

@@ -40,7 +40,7 @@ class CartActivity : BaseUserActivity() {
     private fun setupRecyclerView() {
         val cartItems = com.baust.cafe.utils.CartManager.getItems()
         
-        adapter = CartAdapter(cartItems) {
+        adapter = CartAdapter(cartItems, isEditable = true) {
             updateTotalPrice()
             com.baust.cafe.utils.CartManager.syncWithFirebase()
         }

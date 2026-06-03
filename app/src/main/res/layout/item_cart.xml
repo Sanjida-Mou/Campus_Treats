@@ -51,9 +51,19 @@
                 android:text="$0.00"
                 android:textColor="@color/primary_green"
                 android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/quantitySummary"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Qty: 1"
+                android:textColor="@color/text_hint"
+                android:textSize="12sp"
+                android:visibility="gone" />
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/quantityControlLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"

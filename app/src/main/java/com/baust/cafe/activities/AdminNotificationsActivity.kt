@@ -51,7 +51,9 @@ class AdminNotificationsActivity : BaseAdminActivity() {
                 }
             }
             override fun onCancelled(error: DatabaseError) {
-                android.widget.Toast.makeText(this@AdminNotificationsActivity, "Database Error: ${error.message}", android.widget.Toast.LENGTH_LONG).show()
+                if (com.google.firebase.auth.FirebaseAuth.getInstance().currentUser != null && error.code != DatabaseError.PERMISSION_DENIED) {
+                    android.widget.Toast.makeText(this@AdminNotificationsActivity, "Database Error: ${error.message}", android.widget.Toast.LENGTH_LONG).show()
+                }
             }
         })
     }

@@ -292,9 +292,10 @@ class CheckoutActivity : AppCompatActivity() {
         val confirmBtn = dialog.findViewById<Button>(R.id.confirmPayment)
         val cancelBtn = dialog.findViewById<Button>(R.id.cancelPayment)
         val closeBtn = dialog.findViewById<ImageView>(R.id.closeDialog)
+        val helplineText = dialog.findViewById<TextView>(R.id.helplineText)
 
         val amountToPay = if (isPreorder) subtotal * 0.50 else totalAmount
-        val merchantNumber = "01XXXXXXXXX"
+        val merchantNumber = "01346-361563"
 
         title.text = "Manual Payment"
         label.text = "1. Send Tk. ${String.format("%.2f", amountToPay)} to $merchantNumber via $method app.\n2. Enter your $method number below:"
@@ -305,15 +306,25 @@ class CheckoutActivity : AppCompatActivity() {
         var senderNumber = ""
 
         when (method) {
-            "bKash" -> background.setBackgroundColor(getColor(R.color.bkash_pink))
-            "Nagad" -> background.setBackgroundColor(getColor(R.color.nagad_orange))
+            "bKash" -> {
+                background.setBackgroundColor(getColor(R.color.bkash_pink))
+                confirmBtn.backgroundTintList = android.content.res.ColorStateList.valueOf(getColor(R.color.bkash_pink))
+                helplineText.text = "☏ 16247"
+                helplineText.setTextColor(getColor(R.color.bkash_pink))
+            }
+            "Nagad" -> {
+                background.setBackgroundColor(getColor(R.color.nagad_orange))
+                confirmBtn.backgroundTintList = android.content.res.ColorStateList.valueOf(getColor(R.color.nagad_orange))
+                helplineText.text = "☏ 16167"
+                helplineText.setTextColor(getColor(R.color.nagad_orange))
+            }
         }
 
         confirmBtn.setOnClickListener {
             val input = inputField.text.toString().trim()
             when (step) {
                 1 -> {
-                    if (input.length >= 11) {
+                    if (input.length == 11) {
                         senderNumber = input
                         step = 2
                         label.text = "Enter the Transaction ID (TrxID) from your $method message:"
@@ -322,7 +333,7 @@ class CheckoutActivity : AppCompatActivity() {
                         inputField.inputType = android.text.InputType.TYPE_CLASS_TEXT
                         bottomInstruction.text = "We will verify this manually"
                     } else {
-                        Toast.makeText(this, "Enter valid $method number", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, "Enter valid 11-digit $method number", Toast.LENGTH_SHORT).show()
                     }
                 }
                 2 -> {
@@ -345,6 +356,10 @@ class CheckoutActivity : AppCompatActivity() {
             dialog.dismiss() 
         }
         dialog.show()
+        dialog.window?.setLayout(
+            android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+            android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+        )
     }
 
     private fun finalizeOrder(paymentMethod: String, trxId: String = "") {
@@ -408,7 +423,7 @@ class CheckoutActivity : AppCompatActivity() {
     override fun onResume() { super.onResume(); mapView.onResume() }
     override fun onPause() { super.onPause(); mapView.onPause() }
     private fun setupRecyclerView() {
-        val adapter = CartAdapter(cartItems) {
+        val adapter = CartAdapter(cartItems, isEditable = false) {
             calculateTotal()
             com.baust.cafe.utils.CartManager.syncWithFirebase()
             if (cartItems.isEmpty()) {

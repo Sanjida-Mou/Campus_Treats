@@ -15,7 +15,8 @@ import java.util.Locale
 
 class OrderAdapter(
     private var orders: List<Order>,
-    private val onActionClick: (Order) -> Unit
+    private val onActionClick: (Order) -> Unit,
+    private val onVerifyRefundClick: (Order) -> Unit
 ) : RecyclerView.Adapter<OrderAdapter.OrderViewHolder>() {
 
     class OrderViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -25,6 +26,7 @@ class OrderAdapter(
         val orderDateText: TextView = itemView.findViewById(R.id.orderDateText)
         val orderTotalText: TextView = itemView.findViewById(R.id.orderTotalText)
         val actionButton: Button = itemView.findViewById(R.id.orderActionButton)
+        val verifyRefundButton: Button = itemView.findViewById(R.id.orderVerifyRefundButton)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): OrderViewHolder {
@@ -36,13 +38,17 @@ class OrderAdapter(
         val order = orders[position]
         
         holder.orderIdText.text = "Order #${order.orderId.takeLast(6).uppercase()}"
-        holder.orderStatusText.text = order.status.replace("_", " ").uppercase()
         
-        // Format items string
+        // Show status with refund info if applicable
+        var statusStr = order.status.replace("_", " ").uppercase()
+        if (order.status == "cancelled" && order.refundStatus == "sent_to_user") {
+            statusStr += " (REFUND SENT)"
+        }
+        holder.orderStatusText.text = statusStr
+        
         val itemsSummary = order.items.joinToString { "${it.itemName} x${it.quantity}" }
         holder.orderItemsText.text = itemsSummary
         
-        // Format Date
         val sdf = SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault())
         holder.orderDateText.text = sdf.format(Date(order.orderTime))
         
@@ -56,7 +62,7 @@ class OrderAdapter(
                 holder.actionButton.setBackgroundColor(Color.parseColor("#F44336"))
             }
             "ready" -> {
-                holder.actionButton.visibility = View.GONE // Ongoing - cannot delete anymore
+                holder.actionButton.visibility = View.GONE 
             }
             "delivered", "cancelled" -> {
                 holder.actionButton.text = "Delete History"
@@ -68,9 +74,16 @@ class OrderAdapter(
             }
         }
 
-        holder.actionButton.setOnClickListener {
-            onActionClick(order)
+        // Verify Refund Button Logic
+        if (order.status == "cancelled" && order.refundStatus == "sent_to_user") {
+            holder.verifyRefundButton.visibility = View.VISIBLE
+            holder.actionButton.visibility = View.GONE // Hide Delete until verified
+        } else {
+            holder.verifyRefundButton.visibility = View.GONE
         }
+
+        holder.actionButton.setOnClickListener { onActionClick(order) }
+        holder.verifyRefundButton.setOnClickListener { onVerifyRefundClick(order) }
 
         // Status Colors
         when (order.status.lowercase()) {

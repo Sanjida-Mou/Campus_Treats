@@ -1,165 +1,259 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="8dp"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="4dp"
-    app:cardBackgroundColor="@color/white">
+    android:layout_marginHorizontal="12dp"
+    android:layout_marginVertical="8dp"
+    app:cardBackgroundColor="@color/white"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="6dp">
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
         android:padding="16dp">
 
-        <LinearLayout
-            android:layout_width="match_parent"
+        <!-- Header: Profile Image, Name, and Status -->
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/orderProfileImage"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:src="@drawable/ic_person"
+            app:civ_border_color="@color/primary_green"
+            app:civ_border_width="2dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/orderCustomerName"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:layout_marginStart="14dp"
+            android:layout_marginEnd="8dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="Customer Name"
+            android:textColor="@color/text_black"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toTopOf="@+id/orderCustomerPhone"
+            app:layout_constraintEnd_toStartOf="@+id/orderStatusAdmin"
+            app:layout_constraintStart_toEndOf="@id/orderProfileImage"
+            app:layout_constraintTop_toTopOf="@id/orderProfileImage"
+            app:layout_constraintVertical_chainStyle="packed" />
 
-            <de.hdodenhof.circleimageview.CircleImageView
-                android:id="@+id/orderProfileImage"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:src="@drawable/ic_person"
-                app:civ_border_width="2dp"
-                app:civ_border_color="@color/primary_green" />
+        <!-- We'll assume the adapter sets phone inside the name text view or we can add it here -->
+        <TextView
+            android:id="@+id/orderCustomerPhone"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="(01XXXXXXXXX)"
+            android:textColor="@color/text_hint"
+            android:textSize="13sp"
+            app:layout_constraintBottom_toBottomOf="@id/orderProfileImage"
+            app:layout_constraintEnd_toEndOf="@+id/orderCustomerName"
+            app:layout_constraintStart_toStartOf="@+id/orderCustomerName"
+            app:layout_constraintTop_toBottomOf="@id/orderCustomerName" />
 
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="12dp"
-                android:orientation="vertical">
+        <TextView
+            android:id="@+id/orderStatusAdmin"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/cart_badge_bg"
+            android:backgroundTint="#FFF3E0"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="4dp"
+            android:text="PENDING"
+            android:textColor="#FF9800"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-                <TextView
-                    android:id="@+id/orderCustomerName"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Customer Name"
-                    android:textColor="@color/text_black"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
+        <View
+            android:id="@+id/divider1"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="16dp"
+            android:background="#F0F0F0"
+            app:layout_constraintTop_toBottomOf="@id/orderProfileImage" />
 
-            <TextView
-                android:id="@+id/orderStatusAdmin"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="PENDING"
-                android:textStyle="bold"
-                android:textColor="#FF9800"/>
-        </LinearLayout>
+        <!-- Order Content -->
+        <TextView
+            android:id="@+id/itemsLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="Order Items"
+            android:textColor="@color/primary_green"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/divider1" />
 
         <TextView
             android:id="@+id/orderItems"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="Items: Burger x 2, Pizza x 1"
-            android:textColor="@color/text_black" />
+            android:layout_marginTop="4dp"
+            android:text="Items list here..."
+            android:textColor="@color/text_black"
+            android:textSize="15sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/itemsLabel" />
+
+        <!-- Logistics -->
+        <ImageView
+            android:id="@+id/locIcon"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_marginTop="12dp"
+            android:src="@android:drawable/ic_menu_mylocation"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/orderItems"
+            app:tint="@color/text_hint" />
 
         <TextView
             android:id="@+id/orderAddress"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginStart="8dp"
             android:text="Location: Hall Name, Room 302"
-            android:textColor="@color/text_hint" />
-
-        <TextView
-            android:id="@+id/orderPayment"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="Payment: Bkash"
-            android:textColor="@color/primary_green"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/orderTrxId"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:text="TrxID: A1B2C3D4"
             android:textColor="@color/text_hint"
-            android:textSize="12sp"
-            android:visibility="gone" />
+            android:textSize="13sp"
+            app:layout_constraintBottom_toBottomOf="@id/locIcon"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/locIcon"
+            app:layout_constraintTop_toTopOf="@id/locIcon" />
 
+        <!-- Payment Info -->
+        <LinearLayout
+            android:id="@+id/paymentInfoLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="#FAFAFA"
+            android:orientation="vertical"
+            android:padding="10dp"
+            app:layout_constraintTop_toBottomOf="@id/orderAddress">
+
+            <TextView
+                android:id="@+id/orderPayment"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Payment: Bkash"
+                android:textColor="@color/text_black"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/orderTrxId"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="TrxID: A1B2C3D4 [VERIFIED]"
+                android:textColor="@color/primary_green"
+                android:textSize="12sp"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <!-- Total Price -->
         <TextView
             android:id="@+id/orderTotal"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:layout_gravity="end"
             android:text="Total: Tk 120.00"
             android:textColor="@color/error_red"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/paymentInfoLayout" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
+        <!-- New Admin Labels -->
+        <TextView
+            android:id="@+id/adminActionLabel"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
+            android:layout_marginTop="12dp"
+            android:text="Payment Verification:"
+            android:textColor="#E91E63"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:visibility="gone"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/orderTotal" />
+
+        <!-- Action Buttons -->
+        <LinearLayout
+            android:id="@+id/actionsContainer"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             android:gravity="end"
-            android:layout_marginTop="12dp">
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/adminActionLabel">
 
             <Button
                 android:id="@+id/btnUpdateStatus"
                 android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:text="Update Status"
-                android:textSize="10sp"
+                android:layout_height="44dp"
+                android:backgroundTint="@color/primary_green"
+                android:text="Status"
                 android:textAllCaps="false"
-                android:backgroundTint="@color/primary_green"/>
+                android:textSize="11sp" />
 
             <Button
                 android:id="@+id/btnVerifyPayment"
                 android:layout_width="wrap_content"
-                android:layout_height="40dp"
+                android:layout_height="44dp"
                 android:layout_marginStart="8dp"
-                android:text="Okay"
-                android:textSize="10sp"
-                android:textAllCaps="false"
                 android:backgroundTint="@color/primary_green"
-                android:visibility="gone"/>
+                android:text="Okay"
+                android:textAllCaps="false"
+                android:textSize="11sp"
+                android:visibility="gone" />
 
             <Button
                 android:id="@+id/btnRejectPayment"
                 android:layout_width="wrap_content"
-                android:layout_height="40dp"
+                android:layout_height="44dp"
                 android:layout_marginStart="8dp"
-                android:text="Cancel"
-                android:textSize="10sp"
-                android:textAllCaps="false"
                 android:backgroundTint="@color/error_red"
-                android:visibility="gone"/>
+                android:text="Cancel"
+                android:textAllCaps="false"
+                android:textSize="11sp"
+                android:visibility="gone" />
 
             <Button
                 android:id="@+id/btnReturnPayment"
                 android:layout_width="wrap_content"
-                android:layout_height="40dp"
+                android:layout_height="44dp"
                 android:layout_marginStart="8dp"
-                android:text="Return Payment"
-                android:textSize="10sp"
+                android:backgroundTint="#2196F3"
+                android:text="Refund Money"
                 android:textAllCaps="false"
-                android:backgroundTint="@color/card_blue"
-                android:visibility="gone"/>
+                android:textColor="@color/white"
+                android:textSize="11sp"
+                android:visibility="gone" />
 
             <Button
                 android:id="@+id/btnDeleteOrder"
                 android:layout_width="wrap_content"
-                android:layout_height="40dp"
+                android:layout_height="44dp"
                 android:layout_marginStart="8dp"
-                android:text="Delete History"
-                android:textSize="10sp"
+                android:backgroundTint="#757575"
+                android:text="Delete"
                 android:textAllCaps="false"
-                android:backgroundTint="@color/text_hint"
-                android:visibility="gone"/>
+                android:textColor="@color/white"
+                android:textSize="11sp"
+                android:visibility="gone" />
         </LinearLayout>
 
-    </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.cardview.widget.CardView>

@@ -54,7 +54,9 @@ class UserNotificationsActivity : BaseUserActivity() {
                 adapter.updateList(notificationList)
             }
             override fun onCancelled(error: DatabaseError) {
-                android.widget.Toast.makeText(this@UserNotificationsActivity, "Error: ${error.message}", android.widget.Toast.LENGTH_LONG).show()
+                if (FirebaseAuth.getInstance().currentUser != null && error.code != DatabaseError.PERMISSION_DENIED) {
+                    android.widget.Toast.makeText(this@UserNotificationsActivity, "Error: ${error.message}", android.widget.Toast.LENGTH_LONG).show()
+                }
             }
         })
     }

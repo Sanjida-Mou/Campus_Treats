@@ -90,6 +90,7 @@
                 android:layout_marginStart="12dp"
                 android:background="@android:color/transparent"
                 android:hint="Search for delicious food..."
+                android:textColor="@color/text_black"
                 android:textColorHint="@color/text_hint"
                 android:textSize="15sp"
                 android:inputType="text"

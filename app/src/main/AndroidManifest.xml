@@ -127,6 +127,10 @@
             android:name=".activities.ReportProblemActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".activities.SelectLocationActivity"
+            android:exported="false" />
+
     </application>
 
 </manifest>

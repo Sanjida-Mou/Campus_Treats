@@ -53,6 +53,9 @@ class HomeActivity : BaseUserActivity() {
         loadUserData()
         loadMenuData()
         
+        // Load persistent cart from Firebase
+        com.baust.cafe.utils.CartManager.loadFromFirebase {}
+        
         setupBottomNavigation(R.id.navHome)
 
         // Photo Click -> Go directly to Edit Profile
@@ -95,7 +98,9 @@ class HomeActivity : BaseUserActivity() {
             }
 
             override fun onCancelled(error: DatabaseError) {
-                Toast.makeText(this@HomeActivity, "Failed to load menu", Toast.LENGTH_SHORT).show()
+                if (FirebaseAuth.getInstance().currentUser != null && error.code != DatabaseError.PERMISSION_DENIED) {
+                    Toast.makeText(this@HomeActivity, "Failed to load menu", Toast.LENGTH_SHORT).show()
+                }
             }
         })
     }
