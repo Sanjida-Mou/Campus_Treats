@@ -95,7 +95,7 @@ class OrderHistoryActivity : BaseUserActivity() {
             .setPositiveButton("Yes, Received") { _, _ ->
                 // Final step: Remove order from database as requested
                 database.child(order.orderId).removeValue().addOnSuccessListener {
-                    Toast.makeText(this, "Order completed and removed from history", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, "Refund verified and order removed from history", Toast.LENGTH_LONG).show()
                 }
             }
             .setNegativeButton("Not Yet", null)
