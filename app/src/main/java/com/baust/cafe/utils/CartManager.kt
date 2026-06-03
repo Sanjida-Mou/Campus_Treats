@@ -1,5 +1,6 @@
 package com.baust.cafe.utils
 
+import android.util.Log
 import com.baust.cafe.models.CartItem
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
@@ -27,9 +28,8 @@ object CartManager {
             cartItems.add(item)
         }
         
-        if (isDataLoaded) {
-            syncWithFirebase()
-        }
+        // Force sync whenever we add something
+        syncWithFirebase()
     }
 
     fun getItems(): MutableList<CartItem> {
@@ -52,14 +52,17 @@ object CartManager {
     }
 
     fun getCartTotal(): Double {
-        // Simple sum of current items to ensure UI matches Total
         return cartItems.sumOf { it.price * it.quantity }
     }
 
     fun syncWithFirebase() {
-        // Only save valid, non-duplicate items back to Firebase
+        // Prevent saving empty list if we are still waiting for Firebase to load
+        // But if we have manually added items, we definitely want to save
+        val ref = getDbRef() ?: return
         val sanitized = cartItems.filter { isValid(it) }
-        getDbRef()?.setValue(sanitized)
+        ref.setValue(sanitized).addOnFailureListener {
+            Log.e("CartManager", "Sync failed: ${it.message}")
+        }
     }
 
     fun loadFromFirebase(onComplete: () -> Unit) {
@@ -70,35 +73,40 @@ object CartManager {
         }
 
         ref.get().addOnSuccessListener { snapshot ->
-            val tempItems = mutableListOf<CartItem>()
+            val cloudItems = mutableListOf<CartItem>()
             if (snapshot.exists()) {
                 for (itemSnapshot in snapshot.children) {
                     val item = itemSnapshot.getValue(CartItem::class.java)
                     if (item != null && isValid(item)) {
-                        tempItems.add(item)
+                        cloudItems.add(item)
                     }
                 }
             }
             
-            // DEDUPLICATION: If Firebase had multiple entries for the same ID, merge them
-            val mergedItems = tempItems.groupBy { it.itemId }.map { entry ->
-                val group = entry.value
-                val first = group[0]
-                if (group.size > 1) {
-                    first.copy(quantity = group.sumOf { it.quantity })
+            // Merge logic: Combine what's currently in memory with what's in the cloud
+            // This prevents losing items added just before the sync finished
+            val combinedMap = mutableMapOf<String, CartItem>()
+            
+            // Add items from cloud first
+            cloudItems.forEach { combinedMap[it.itemId] = it }
+            
+            // Overwrite/Add items from local memory (most recent additions)
+            cartItems.forEach { localItem ->
+                val existing = combinedMap[localItem.itemId]
+                if (existing != null) {
+                    // If both have it, take the higher quantity or merge
+                    combinedMap[localItem.itemId] = localItem.copy(quantity = localItem.quantity)
                 } else {
-                    first
+                    combinedMap[localItem.itemId] = localItem
                 }
             }
 
             cartItems.clear()
-            cartItems.addAll(mergedItems)
+            cartItems.addAll(combinedMap.values)
             isDataLoaded = true
             
-            // Clean up the database if we found bad data
-            if (tempItems.size != mergedItems.size) {
-                syncWithFirebase()
-            }
+            // Clean up duplicates and bad data in the cloud
+            syncWithFirebase()
 
             onComplete()
         }.addOnFailureListener {

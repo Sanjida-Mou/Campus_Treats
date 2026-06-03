@@ -425,7 +425,6 @@ class CheckoutActivity : AppCompatActivity() {
     private fun setupRecyclerView() {
         val adapter = CartAdapter(cartItems, isEditable = false) {
             calculateTotal()
-            com.baust.cafe.utils.CartManager.syncWithFirebase()
             if (cartItems.isEmpty()) {
                 Toast.makeText(this, "Cart is empty", Toast.LENGTH_SHORT).show()
                 finish()
