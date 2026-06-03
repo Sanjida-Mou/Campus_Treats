@@ -24,7 +24,6 @@ class EditMenuItemActivity : AppCompatActivity() {
     private lateinit var itemName: EditText
     private lateinit var itemDescription: EditText
     private lateinit var itemPrice: EditText
-    private lateinit var itemCategory: EditText
     private lateinit var updateFoodButton: Button
     private lateinit var editItemImage: ImageView
     private lateinit var progressDialog: ProgressDialog
@@ -42,7 +41,6 @@ class EditMenuItemActivity : AppCompatActivity() {
         itemName = findViewById(R.id.itemName)
         itemDescription = findViewById(R.id.itemDescription)
         itemPrice = findViewById(R.id.itemPrice)
-        itemCategory = findViewById(R.id.itemCategory)
         updateFoodButton = findViewById(R.id.addFoodButton)
         editItemImage = findViewById(R.id.addItemImage)
 
@@ -57,7 +55,6 @@ class EditMenuItemActivity : AppCompatActivity() {
         itemName.setText(intent.getStringExtra("ITEM_NAME"))
         itemDescription.setText(intent.getStringExtra("ITEM_DESC"))
         itemPrice.setText(intent.getDoubleExtra("ITEM_PRICE", 0.0).toString())
-        itemCategory.setText(intent.getStringExtra("ITEM_CAT"))
         currentImageUrl = intent.getStringExtra("ITEM_IMAGE") ?: ""
         isAvailable = intent.getBooleanExtra("ITEM_AVAILABLE", true)
 
@@ -98,7 +95,6 @@ class EditMenuItemActivity : AppCompatActivity() {
         val name = itemName.text.toString().trim()
         val desc = itemDescription.text.toString().trim()
         val priceStr = itemPrice.text.toString().trim()
-        val category = itemCategory.text.toString().trim()
 
         if (name.isEmpty() || priceStr.isEmpty()) {
             Toast.makeText(this, "Please fill name and price", Toast.LENGTH_SHORT).show()
@@ -121,14 +117,14 @@ class EditMenuItemActivity : AppCompatActivity() {
                 scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 50, outputStream)
                 val byteArray = outputStream.toByteArray()
                 val base64Image = Base64.encodeToString(byteArray, Base64.DEFAULT)
-                saveToDatabase(name, desc, price, category, base64Image)
+                saveToDatabase(name, desc, price, base64Image)
             } catch (e: Exception) {
                 progressDialog.dismiss()
                 Toast.makeText(this, "Error processing image: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         } else {
             // Keep old image
-            saveToDatabase(name, desc, price, category, currentImageUrl)
+            saveToDatabase(name, desc, price, currentImageUrl)
         }
     }
 
@@ -146,13 +142,13 @@ class EditMenuItemActivity : AppCompatActivity() {
         return Bitmap.createScaledBitmap(bitmap, width, height, true)
     }
 
-    private fun saveToDatabase(name: String, desc: String, price: Double, category: String, imageUrl: String) {
+    private fun saveToDatabase(name: String, desc: String, price: Double, imageUrl: String) {
         val updatedItem = MenuItem(
             itemId = itemId,
             name = name,
             description = desc,
             price = price,
-            category = category,
+            category = "General",
             available = isAvailable,
             imageUrl = imageUrl,
             preparationTime = 15

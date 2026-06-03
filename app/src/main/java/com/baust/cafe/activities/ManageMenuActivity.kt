@@ -36,7 +36,6 @@ class ManageMenuActivity : BaseAdminActivity() {
                     putExtra("ITEM_NAME", item.name)
                     putExtra("ITEM_DESC", item.description)
                     putExtra("ITEM_PRICE", item.price)
-                    putExtra("ITEM_CAT", item.category)
                     putExtra("ITEM_IMAGE", item.imageUrl)
                     putExtra("ITEM_AVAILABLE", item.available)
                 }

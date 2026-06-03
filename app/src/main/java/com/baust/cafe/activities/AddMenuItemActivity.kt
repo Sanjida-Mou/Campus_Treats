@@ -26,7 +26,6 @@ class AddMenuItemActivity : AppCompatActivity() {
     private lateinit var itemName: EditText
     private lateinit var itemDescription: EditText
     private lateinit var itemPrice: EditText
-    private lateinit var itemCategory: EditText
     private lateinit var addFoodButton: Button
     private lateinit var addItemImage: ImageView
     private lateinit var selectImageFab: FloatingActionButton
@@ -42,7 +41,6 @@ class AddMenuItemActivity : AppCompatActivity() {
         itemName = findViewById(R.id.itemName)
         itemDescription = findViewById(R.id.itemDescription)
         itemPrice = findViewById(R.id.itemPrice)
-        itemCategory = findViewById(R.id.itemCategory)
         addFoodButton = findViewById(R.id.addFoodButton)
         addItemImage = findViewById(R.id.addItemImage)
         selectImageFab = findViewById(R.id.selectImageFab)
@@ -78,7 +76,6 @@ class AddMenuItemActivity : AppCompatActivity() {
         val name = itemName.text.toString().trim()
         val desc = itemDescription.text.toString().trim()
         val priceStr = itemPrice.text.toString().trim()
-        val category = itemCategory.text.toString().trim()
 
         if (name.isEmpty() || priceStr.isEmpty()) {
             Toast.makeText(this, "Please fill name and price", Toast.LENGTH_SHORT).show()
@@ -94,7 +91,7 @@ class AddMenuItemActivity : AppCompatActivity() {
         val price = try { priceStr.toDouble() } catch (e: Exception) { 0.0 }
         val itemId = UUID.randomUUID().toString()
 
-        // CONVERT IMAGE TO BASE64 (Exactly like Profile Logic)
+        // CONVERT IMAGE TO BASE64
         try {
             val inputStream = contentResolver.openInputStream(selectedImageUri!!)
             val bitmap = BitmapFactory.decodeStream(inputStream)
@@ -105,7 +102,6 @@ class AddMenuItemActivity : AppCompatActivity() {
                 return
             }
 
-            // Scale down to save space
             val scaledBitmap = scaleBitmap(bitmap, 600)
             
             val outputStream = ByteArrayOutputStream()
@@ -113,7 +109,7 @@ class AddMenuItemActivity : AppCompatActivity() {
             val byteArray = outputStream.toByteArray()
             val base64Image = Base64.encodeToString(byteArray, Base64.NO_WRAP)
             
-            saveToDatabase(itemId, name, desc, price, category, base64Image)
+            saveToDatabase(itemId, name, desc, price, base64Image)
         } catch (e: Exception) {
             progressDialog.dismiss()
             Toast.makeText(this, "Error processing image: ${e.message}", Toast.LENGTH_SHORT).show()
@@ -134,13 +130,13 @@ class AddMenuItemActivity : AppCompatActivity() {
         return Bitmap.createScaledBitmap(bitmap, width, height, true)
     }
 
-    private fun saveToDatabase(itemId: String, name: String, desc: String, price: Double, category: String, imageUrl: String) {
+    private fun saveToDatabase(itemId: String, name: String, desc: String, price: Double, imageUrl: String) {
         val newItem = MenuItem(
             itemId = itemId,
             name = name,
             description = desc,
             price = price,
-            category = category,
+            category = "General",
             available = true,
             imageUrl = imageUrl,
             preparationTime = 15

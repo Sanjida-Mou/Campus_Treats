@@ -66,8 +66,7 @@ class MenuActivity : BaseUserActivity() {
         } else {
             val lowerQuery = query.lowercase(Locale.getDefault())
             for (item in allMenuItems) {
-                if (item.name.lowercase(Locale.getDefault()).contains(lowerQuery) || 
-                    item.category.lowercase(Locale.getDefault()).contains(lowerQuery)) {
+                if (item.name.lowercase(Locale.getDefault()).contains(lowerQuery)) {
                     filteredMenuItems.add(item)
                 }
             }
@@ -91,7 +90,8 @@ class MenuActivity : BaseUserActivity() {
         }
 
         findViewById<android.widget.ImageView>(R.id.navNotifications).setOnClickListener {
-            Toast.makeText(this, "No new notifications", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, UserNotificationsActivity::class.java))
+            finish()
         }
 
         findViewById<android.widget.ImageView>(R.id.navProfile).setOnClickListener {

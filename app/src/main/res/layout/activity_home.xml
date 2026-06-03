@@ -98,19 +98,6 @@
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
-    <!-- Categories -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/categoriesRecyclerView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:clipToPadding="false"
-        android:orientation="horizontal"
-        android:paddingHorizontal="24dp"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        app:layout_constraintTop_toBottomOf="@id/searchCard"
-        tools:listitem="@layout/item_category" />
-
     <!-- Popular Section Header -->
     <LinearLayout
         android:id="@+id/popularHeader"
@@ -120,7 +107,7 @@
         android:layout_marginHorizontal="24dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        app:layout_constraintTop_toBottomOf="@id/categoriesRecyclerView">
+        app:layout_constraintTop_toBottomOf="@id/searchCard">
 
         <TextView
             android:layout_width="0dp"
