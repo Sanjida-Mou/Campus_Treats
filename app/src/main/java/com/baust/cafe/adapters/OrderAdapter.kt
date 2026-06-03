@@ -64,7 +64,7 @@ class OrderAdapter(
             "ready" -> {
                 holder.actionButton.visibility = View.GONE 
             }
-            "delivered", "cancelled" -> {
+            "delivered", "handed_over", "cancelled" -> {
                 holder.actionButton.text = "Delete History"
                 holder.actionButton.visibility = View.VISIBLE
                 holder.actionButton.setBackgroundColor(Color.GRAY)
@@ -92,6 +92,7 @@ class OrderAdapter(
             "preparing" -> holder.orderStatusText.setTextColor(Color.parseColor("#2196F3"))
             "ready" -> holder.orderStatusText.setTextColor(Color.parseColor("#4CAF50"))
             "delivered" -> holder.orderStatusText.setTextColor(Color.parseColor("#2E7D32"))
+            "handed_over" -> holder.orderStatusText.setTextColor(Color.parseColor("#0288D1"))
             "cancelled" -> holder.orderStatusText.setTextColor(Color.parseColor("#F44336"))
             else -> holder.orderStatusText.setTextColor(Color.GRAY)
         }

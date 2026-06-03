@@ -162,17 +162,28 @@ class ViewOrdersActivity : BaseAdminActivity() {
     }
 
     private fun showUpdateStatusDialog(order: Order) {
-        val statuses = arrayOf("pending", "preparing", "ready", "delivered", "cancelled")
+        val isPreorder = order.deliveryOption == "pickup"
+        val statuses = if (isPreorder) {
+            arrayOf("pending", "preparing", "ready", "handed_over", "cancelled")
+        } else {
+            arrayOf("pending", "preparing", "ready", "delivered", "cancelled")
+        }
+        
+        val displayStatuses = statuses.map { it.replace("_", " ").uppercase() }.toTypedArray()
         val currentStatusIndex = statuses.indexOf(order.status.lowercase())
         
         AlertDialog.Builder(this)
             .setTitle("Update Order Status")
-            .setSingleChoiceItems(statuses, currentStatusIndex) { dialog, which ->
+            .setSingleChoiceItems(displayStatuses, currentStatusIndex) { dialog, which ->
                 val newStatus = statuses[which]
                 database.child(order.orderId).child("status").setValue(newStatus).addOnSuccessListener {
                     when (newStatus) {
                         "delivered" -> pushUserNotification(order.studentId, "Status Update", "our order delivered", "order_status")
-                        "ready" -> pushUserNotification(order.studentId, "Order Ready!", "Your food is ready for pickup!", "order_status")
+                        "handed_over" -> pushUserNotification(order.studentId, "Order Handed Over", "Your food has been handed over. Enjoy your meal!", "order_status")
+                        "ready" -> {
+                            val msg = if (isPreorder) "Your food is ready! Please come to the cafe to collect it." else "Your food is ready for delivery!"
+                            pushUserNotification(order.studentId, "Order Ready!", msg, "order_status")
+                        }
                         "preparing" -> pushUserNotification(order.studentId, "Order Preparing", "Your food is being prepared in the kitchen.", "order_status")
                         "cancelled" -> {
                             val isOnlinePayment = order.specialInstructions.contains("bKash", ignoreCase = true) || 

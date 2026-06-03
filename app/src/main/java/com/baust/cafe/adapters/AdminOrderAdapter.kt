@@ -126,6 +126,10 @@ class AdminOrderAdapter(
                 holder.status.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#C8E6C9"))
                 holder.status.setTextColor(Color.parseColor("#2E7D32"))
             }
+            "handed_over" -> {
+                holder.status.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#E1F5FE"))
+                holder.status.setTextColor(Color.parseColor("#0288D1"))
+            }
             "cancelled" -> {
                 holder.status.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#FFEBEE"))
                 holder.status.setTextColor(Color.parseColor("#F44336"))
@@ -172,7 +176,7 @@ class AdminOrderAdapter(
             holder.btnReturnPayment.visibility = View.GONE
             
             // Can update status only if active
-            if (order.status == "delivered" || order.status == "cancelled") {
+            if (order.status == "delivered" || order.status == "handed_over" || order.status == "cancelled") {
                 holder.btnUpdateStatus.visibility = View.GONE
                 holder.btnDeleteOrder.visibility = View.VISIBLE
                 holder.adminActionLabel.visibility = View.GONE
