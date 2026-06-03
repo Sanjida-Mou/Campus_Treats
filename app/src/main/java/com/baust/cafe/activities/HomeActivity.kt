@@ -28,9 +28,11 @@ class HomeActivity : BaseUserActivity() {
     private lateinit var navNotifications: ImageView
     private lateinit var navProfile: ImageView
     
+    private lateinit var searchEditText: android.widget.EditText
     private lateinit var menuRecyclerView: RecyclerView
     private lateinit var popularFoodAdapter: PopularFoodAdapter
     private val foodList = mutableListOf<MenuItem>()
+    private val filteredFoodList = mutableListOf<MenuItem>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,9 +48,11 @@ class HomeActivity : BaseUserActivity() {
         navBookmark = findViewById(R.id.navBookmark)
         navNotifications = findViewById(R.id.navNotifications)
         navProfile = findViewById(R.id.navProfile)
+        searchEditText = findViewById(R.id.searchEditText)
         menuRecyclerView = findViewById(R.id.menuRecyclerView)
 
         setupMenuRecyclerView()
+        setupSearch()
         setupNavigation()
         loadUserData()
         loadMenuData()
@@ -67,7 +71,7 @@ class HomeActivity : BaseUserActivity() {
     private fun setupMenuRecyclerView() {
         menuRecyclerView.layoutManager = androidx.recyclerview.widget.GridLayoutManager(this, 2)
 
-        popularFoodAdapter = PopularFoodAdapter(foodList) { menuItem ->
+        popularFoodAdapter = PopularFoodAdapter(filteredFoodList) { menuItem ->
             val cartItem = com.baust.cafe.models.CartItem(
                 itemId = menuItem.itemId,
                 itemName = menuItem.name,
@@ -83,6 +87,32 @@ class HomeActivity : BaseUserActivity() {
         menuRecyclerView.adapter = popularFoodAdapter
     }
 
+    private fun setupSearch() {
+        searchEditText.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                filterFood(s.toString())
+            }
+            override fun afterTextChanged(s: android.text.Editable?) {}
+        })
+    }
+
+    private fun filterFood(query: String) {
+        filteredFoodList.clear()
+        if (query.isEmpty()) {
+            filteredFoodList.addAll(foodList)
+        } else {
+            val lowerQuery = query.lowercase(java.util.Locale.getDefault())
+            for (item in foodList) {
+                if (item.name.lowercase(java.util.Locale.getDefault()).contains(lowerQuery) ||
+                    item.category.lowercase(java.util.Locale.getDefault()).contains(lowerQuery)) {
+                    filteredFoodList.add(item)
+                }
+            }
+        }
+        popularFoodAdapter.notifyDataSetChanged()
+    }
+
     private fun loadMenuData() {
         val database = FirebaseDatabase.getInstance().getReference("Menu")
         database.addValueEventListener(object : ValueEventListener {
@@ -94,7 +124,7 @@ class HomeActivity : BaseUserActivity() {
                         foodList.add(item)
                     }
                 }
-                popularFoodAdapter.updateList(foodList)
+                filterFood(searchEditText.text.toString())
             }
 
             override fun onCancelled(error: DatabaseError) {
