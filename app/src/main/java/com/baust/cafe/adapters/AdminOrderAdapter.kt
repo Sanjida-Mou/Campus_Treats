@@ -65,7 +65,7 @@ class AdminOrderAdapter(
                     } else {
                         try {
                             val imageBytes = android.util.Base64.decode(imageUrl, android.util.Base64.DEFAULT)
-                            val bitmap = android.graphics.BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+                            val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
                             holder.profileImage.setImageBitmap(bitmap)
                         } catch (e: Exception) {
                             holder.profileImage.setImageResource(R.drawable.ic_person)
@@ -83,6 +83,9 @@ class AdminOrderAdapter(
         holder.address.text = "Location: ${order.deliveryAddress}"
         
         // Payment Info & Status
+        val isOnlinePayment = order.specialInstructions.contains("bKash", ignoreCase = true) || 
+                             order.specialInstructions.contains("Nagad", ignoreCase = true)
+        
         holder.payment.text = "Payment: ${order.specialInstructions.replace("Payment: ", "")}"
         
         if (order.transactionId.isNotEmpty()) {
@@ -101,7 +104,7 @@ class AdminOrderAdapter(
         holder.total.text = String.format(Locale.getDefault(), "Total: Tk %.2f", order.totalAmount)
         holder.status.text = order.status.replace("_", " ").uppercase()
 
-        // Status Colors (Matching activity_home.xml chips)
+        // Status Colors
         when (order.status.lowercase()) {
             "pending" -> {
                 holder.status.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#FFF3E0"))
@@ -129,7 +132,9 @@ class AdminOrderAdapter(
             }
         }
 
-        // Admin Action Buttons visibility logic
+        // --- BUTTON VISIBILITY LOGIC ---
+        
+        // Path A: Verification Needed
         if (order.paymentStatus == "pending_verification") {
             holder.adminActionLabel.text = "Payment Verification:"
             holder.adminActionLabel.visibility = View.VISIBLE
@@ -138,41 +143,43 @@ class AdminOrderAdapter(
             holder.btnUpdateStatus.visibility = View.GONE
             holder.btnReturnPayment.visibility = View.GONE
             holder.btnDeleteOrder.visibility = View.GONE
-        } else {
+        } 
+        // Path B: Cancelled but money was taken -> REFUND REQUIRED
+        else if (order.status == "cancelled" && isOnlinePayment && order.paymentStatus == "verified") {
+            holder.adminActionLabel.text = "Refund Action Required:"
+            holder.adminActionLabel.visibility = View.VISIBLE
+            holder.btnReturnPayment.visibility = View.VISIBLE
+            holder.btnDeleteOrder.visibility = View.GONE // FORBIDDEN TO DELETE
+            
             holder.btnVerifyPayment.visibility = View.GONE
             holder.btnRejectPayment.visibility = View.GONE
+            holder.btnUpdateStatus.visibility = View.GONE
             
-            if (order.status == "delivered" || order.status == "cancelled" || order.paymentStatus == "rejected") {
+            if (order.refundStatus == "sent_to_user") {
+                holder.btnReturnPayment.text = "Sent (Waiting User)"
+                holder.btnReturnPayment.isEnabled = false
+                holder.btnReturnPayment.alpha = 0.5f
+            } else {
+                holder.btnReturnPayment.text = "Refund Money"
+                holder.btnReturnPayment.isEnabled = true
+                holder.btnReturnPayment.alpha = 1.0f
+            }
+        }
+        // Path C: Standard Management
+        else {
+            holder.btnVerifyPayment.visibility = View.GONE
+            holder.btnRejectPayment.visibility = View.GONE
+            holder.btnReturnPayment.visibility = View.GONE
+            
+            // Can update status only if active
+            if (order.status == "delivered" || order.status == "cancelled") {
                 holder.btnUpdateStatus.visibility = View.GONE
+                holder.btnDeleteOrder.visibility = View.VISIBLE
+                holder.adminActionLabel.visibility = View.GONE
             } else {
                 holder.btnUpdateStatus.visibility = View.VISIBLE
-            }
-
-            val isOnlinePayment = order.specialInstructions.contains("bKash", ignoreCase = true) || 
-                                 order.specialInstructions.contains("Nagad", ignoreCase = true)
-            
-            if (order.status == "cancelled" && isOnlinePayment && order.paymentStatus == "verified" && order.refundStatus != "completed") {
-                holder.adminActionLabel.text = "Refund Action Required:"
-                holder.adminActionLabel.visibility = View.VISIBLE
-                holder.btnReturnPayment.visibility = View.VISIBLE
-                if (order.refundStatus == "sent_to_user") {
-                    holder.btnReturnPayment.text = "Sent (Waiting User)"
-                    holder.btnReturnPayment.isEnabled = false
-                    holder.btnReturnPayment.alpha = 0.7f
-                } else {
-                    holder.btnReturnPayment.text = "Refund Money"
-                    holder.btnReturnPayment.isEnabled = true
-                    holder.btnReturnPayment.alpha = 1.0f
-                }
-            } else {
-                holder.btnReturnPayment.visibility = View.GONE
-                holder.adminActionLabel.visibility = View.GONE
-            }
-
-            if (order.status == "delivered" || order.status == "cancelled") {
-                holder.btnDeleteOrder.visibility = View.VISIBLE
-            } else {
                 holder.btnDeleteOrder.visibility = View.GONE
+                holder.adminActionLabel.visibility = View.GONE
             }
         }
 
