@@ -33,6 +33,8 @@ class HomeActivity : BaseUserActivity() {
     private lateinit var popularFoodAdapter: PopularFoodAdapter
     private val foodList = mutableListOf<MenuItem>()
     private val filteredFoodList = mutableListOf<MenuItem>()
+    private lateinit var categoriesRecyclerView: RecyclerView
+    private var selectedCategory: String = "All"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,8 +52,10 @@ class HomeActivity : BaseUserActivity() {
         navProfile = findViewById(R.id.navProfile)
         searchEditText = findViewById(R.id.searchEditText)
         menuRecyclerView = findViewById(R.id.menuRecyclerView)
+        categoriesRecyclerView = findViewById(R.id.categoriesRecyclerView)
 
         setupMenuRecyclerView()
+        setupCategories()
         setupSearch()
         setupNavigation()
         loadUserData()
@@ -66,6 +70,23 @@ class HomeActivity : BaseUserActivity() {
         profileImage.setOnClickListener {
             startActivity(Intent(this, EditProfileActivity::class.java))
         }
+    }
+
+    private fun setupCategories() {
+        val categories = listOf(
+            com.baust.cafe.adapters.Category("All", R.drawable.ic_menu),
+            com.baust.cafe.adapters.Category("Burger", R.drawable.cafe_logo),
+            com.baust.cafe.adapters.Category("Pizza", R.drawable.cafe_logo),
+            com.baust.cafe.adapters.Category("Drinks", R.drawable.cafe_logo),
+            com.baust.cafe.adapters.Category("Snacks", R.drawable.cafe_logo)
+        )
+        
+        val adapter = com.baust.cafe.adapters.CategoryAdapter(categories) { category ->
+            selectedCategory = category
+            filterFood(searchEditText.text.toString())
+        }
+        categoriesRecyclerView.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(this, androidx.recyclerview.widget.LinearLayoutManager.HORIZONTAL, false)
+        categoriesRecyclerView.adapter = adapter
     }
 
     private fun setupMenuRecyclerView() {
@@ -99,15 +120,17 @@ class HomeActivity : BaseUserActivity() {
 
     private fun filterFood(query: String) {
         filteredFoodList.clear()
-        if (query.isEmpty()) {
-            filteredFoodList.addAll(foodList)
-        } else {
-            val lowerQuery = query.lowercase(java.util.Locale.getDefault())
-            for (item in foodList) {
-                if (item.name.lowercase(java.util.Locale.getDefault()).contains(lowerQuery) ||
-                    item.category.lowercase(java.util.Locale.getDefault()).contains(lowerQuery)) {
-                    filteredFoodList.add(item)
-                }
+        val lowerQuery = query.lowercase(java.util.Locale.getDefault())
+        
+        for (item in foodList) {
+            val matchesQuery = item.name.lowercase(java.util.Locale.getDefault()).contains(lowerQuery) ||
+                              item.category.lowercase(java.util.Locale.getDefault()).contains(lowerQuery)
+            
+            val matchesCategory = selectedCategory == "All" || 
+                                 item.category.equals(selectedCategory, ignoreCase = true)
+            
+            if (matchesQuery && matchesCategory) {
+                filteredFoodList.add(item)
             }
         }
         popularFoodAdapter.notifyDataSetChanged()
